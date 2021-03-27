@@ -1,64 +1,33 @@
 const path = require("path");
-const express = require("express");
-const morgan = require("morgan");
-const handlebars = require("express-handlebars");
-const mysql = require("mysql");
-const { join } = require("path");
-const app = express();
+const bodyParser = require('body-parser');
 const port = 3000;
+const express = require('express');
+const cors = require('cors');
+// const nodemailer = require('nodemailer');
+const { withJWTAuthMiddleware } = require('express-kun');
+const login = require('./routes/loginroutes');
+require('dotenv').config();
 
-const con = mysql.createConnection({
-  host: "localhost",
-  user: "tranquanghuy",
-  password: "123456",
-  database: "database",
-});
+const router = express.Router();
+const protectRouter = withJWTAuthMiddleware(router, 'yourSecretKey');
+const app = express();
 
-app.use(express.json());
-app.use(express.urlencoded());
-app.use(morgan("combined"));
-app.use(express.static(path.join(__dirname, "public")));
-app.engine(
-  "hbs",
-  handlebars({
-    extname: ".hbs",
-  })
-);
 
-app.set("view engine", "hbs");
-app.set("views", path.join(__dirname, "resources/views"));
 
-app.get("/", function (req, res) {
-  res.render("home");
-});
-
-app.get("/news", function (req, res) {
-  res.render("news");
-});
-
-app.get("/api/data", (req, res) => {
-  con.connect(function (err) {
-    const sql = "SELECT * FROM user";
-    con.query(sql, function (err, results) {
-      if (err) throw err;
-      res.status(500).json(results)
-    });
-  }); 
-});
-
-app.post("/api/data", (req, res) => {
-  if (req.body) {
-    con.connect(function (err) {
-      const sql =
-        "INSERT INTO `user` (`id`, `username`, `password`, `email`, `phoneNumber`, `address`, `permisson`) VALUES " +
-        `(NULL, '${req.body[0].username}', '${req.body[0].password}', '${req.body[0].email}', '${req.body[0].phoneNumber}', '${req.body[0].address}', '${req.body[0].permisson}');`;
-      con.query(sql, function (err, results) {
-        if (err) throw err;
-        res.json(results);
-      });
-    });
-  }
-});
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+router.post('/register', login.register);
+router.post('/forgot', login.forgot);
+router.post('/reset/:token', login.reset);
+protectRouter.get('/', login.getAll);
+router.post('/login', login.login);
+protectRouter.get('/:id', login.get);
+router.post('/update', login.update);
+router.post('/update1/:id', login.update1);
+router.post('/updateState/:id', login.updateState);
+// router.post('/forgot-password',)
+app.use('/api', router);
 
 app.listen(port, function () {
   console.log("Your app running on port " + port);
