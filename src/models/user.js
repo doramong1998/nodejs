@@ -25,9 +25,12 @@ module.exports = (sequelize, type) => sequelize.define('user', {
   },
   state: {
     type: type.STRING,
-
+  },
+  idUser: {
+    type: type.STRING,
+    allowNull: false,
   },
 }, {
-  tableName: 'Users',
+  tableName: 'users',
   timestamps: false,
 });

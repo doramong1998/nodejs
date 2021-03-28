@@ -8,8 +8,20 @@ const { withJWTAuthMiddleware } = require('express-kun');
 const login = require('./routes/loginroutes');
 require('dotenv').config();
 
+function getTokenFromBearer(req) {
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    throw new Error("No Authorization Header");
+  }
+  try {
+    const token = authorization.split("Bearer ")[1];
+    return token;
+  } catch {
+    throw new Error("Invalid Token Format");
+  }
+}
 const router = express.Router();
-const protectRouter = withJWTAuthMiddleware(router, 'yourSecretKey');
+const protectRouter = withJWTAuthMiddleware(router, 'yourSecretKey', getTokenFromBearer);
 const app = express();
 
 
@@ -26,6 +38,7 @@ protectRouter.get('/:id', login.get);
 router.post('/update', login.update);
 router.post('/update1/:id', login.update1);
 router.post('/updateState/:id', login.updateState);
+protectRouter.get('/users/me', login.getMe);
 // router.post('/forgot-password',)
 app.use('/api', router);
 

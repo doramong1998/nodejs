@@ -5,10 +5,11 @@ const crypto = require("crypto");
 const mysql = require("mysql");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
+const { v4: uuidv4 } = require("uuid");
 const { Op } = require("sequelize");
-const User = require("../sequelize");
+const { User, user_info } = require("../sequelize");
 require("dotenv").config();
-
+const accessTokenSecret = "yourSecretKey";
 const saltRounds = 10;
 
 const connection = mysql.createConnection({
@@ -54,6 +55,7 @@ exports.register = async (req, res) => {
     if (user == null) {
       User.create({
         username: users.username,
+        idUser: uuidv4(),
         email: users.email,
         password: users.password,
         state: "Active",
@@ -88,7 +90,7 @@ exports.login = async function (req, res, err) {
   } else {
     const comparision = await bcrypt.compare(userLogin.password, user.password);
     if (comparision) {
-      const accessToken = jwt.sign({ user }, "yourSecretKey", {
+      const accessToken = jwt.sign({ user }, accessTokenSecret, {
         expiresIn: "24h",
       });
       // user.update({
@@ -290,4 +292,24 @@ exports.updateState = async (req, res) => {
       message: "Ok",
     });
   }
+};
+
+exports.getMe = async (req, res) => {
+  const token = req.headers.authorization.split("Bearer ")[1];
+  jwt.verify(token, accessTokenSecret, (err, user) => {
+    if (err) {
+      return res.sendStatus(403);
+    }
+    req.user = user;
+  });
+  const userInfo = await user_info.findOne({
+    where: {
+      idUser:req.user.user.idUser,
+    },
+  });
+  res.status(200).json({
+    message: "Thành công!",
+    data: userInfo,
+    status: 200
+  });
 };

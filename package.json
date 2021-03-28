@@ -21,7 +21,8 @@
     "nodemailer": "^6.5.0",
     "nodemon": "^2.0.4",
     "sequelize": "^6.6.2",
-    "sqlite3": "^5.0.0"
+    "sqlite3": "^5.0.0",
+    "uuid": "^8.3.2"
   },
   "keywords": [
     "NodeJS",
