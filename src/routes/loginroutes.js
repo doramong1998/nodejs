@@ -7,7 +7,7 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const { Op } = require("sequelize");
-const { User, user_info } = require("../sequelize");
+const { User, UserInfo } = require("../sequelize");
 require("dotenv").config();
 const accessTokenSecret = "yourSecretKey";
 const saltRounds = 10;
@@ -295,7 +295,7 @@ exports.getMe = async (req, res) => {
     }
     req.user = user;
   });
-  const userInfo = await user_info.findOne({
+  const userInfo = await UserInfo.findOne({
     where: {
       idUser:req.user.user.idUser,
     },
