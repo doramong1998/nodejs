@@ -18,12 +18,12 @@ module.exports = (sequelize, type) => sequelize.define('userInfo', {
   
     },
     gender: {
-      type: type.STRING,
+      type: type.STRING, 
     },
     dob: {
       type: type.STRING,
     },
-    class: {
+    idClass: {
       type: type.STRING,
     },
     studentId: {

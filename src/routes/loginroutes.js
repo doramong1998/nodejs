@@ -174,13 +174,6 @@ exports.getAll = async function (req, res) {
   });
 };
 
-exports.test = async function (req, res) {
-  res.json({
-    user,
-    message: "create user successfully",
-  });
-};
-
 // eslint-disable-next-line func-names
 exports.get = async function (req, res) {
   const user = await User.findOne({

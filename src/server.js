@@ -6,6 +6,7 @@ const cors = require('cors');
 // const nodemailer = require('nodemailer');
 const { withJWTAuthMiddleware } = require('express-kun');
 const login = require('./routes/loginroutes');
+const classes = require('./routes/classesRoutes');
 require('dotenv').config();
 
 function getTokenFromBearer(req) {
@@ -32,13 +33,15 @@ app.use(bodyParser.json());
 router.post('/register', login.register);
 router.post('/forgot', login.forgot);
 router.post('/reset/:token', login.reset);
-protectRouter.get('/', login.getAll);
 router.post('/login', login.login);
-protectRouter.get('/:id', login.get);
 router.post('/update', login.update);
 router.post('/update1/:id', login.update1);
 router.post('/updateState/:id', login.updateState);
 protectRouter.get('/users/me', login.getMe);
+protectRouter.post('/classes/create', classes.createClass);
+protectRouter.get('/classes', classes.getClass);
+protectRouter.get('/:id', login.get);
+protectRouter.get('/', login.getAll);
 // router.post('/forgot-password',)
 app.use('/api', router);
 

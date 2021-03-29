@@ -14,7 +14,7 @@ if (!dbExists) {
     // '`id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,' +
     // '`name` TEXT,' +
     // '`email` TEXT,');
-    console.log('cut')
+    console.log('--------------Bye---------------')
 }
 
 // You can insert some data here in order to test
