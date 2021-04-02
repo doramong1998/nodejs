@@ -25,8 +25,6 @@ const router = express.Router();
 const protectRouter = withJWTAuthMiddleware(router, 'yourSecretKey', getTokenFromBearer);
 const app = express();
 
-
-
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -39,6 +37,8 @@ router.post('/update1/:id', login.update1);
 router.post('/updateState/:id', login.updateState);
 protectRouter.get('/users/me', login.getMe);
 protectRouter.post('/classes/create', classes.createClass);
+protectRouter.put('/classes/update/:id', classes.updateClass);
+protectRouter.delete('/classes/delete', classes.deleteClass);
 protectRouter.get('/classes', classes.getClass);
 protectRouter.get('/:id', login.get);
 protectRouter.get('/', login.getAll);

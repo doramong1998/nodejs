@@ -40,37 +40,51 @@ exports.getClass = async (req, res) => {
 
 exports.createClass = async (req, res) => {
   if (
-    !req.body.className ||
+    !req.body.name ||
     !req.body.idTeacher ||
-    req.body.className === "" ||
+    req.body.name === "" ||
     req.body.idTeacher === ""
   ) {
     res.status(400).json({
       error: "Tên lớp học và giáo viên là bắt buộc!",
       status: 400,
     });
-  }
-  const { className, idTeacher, students, files, status } = req.body;
-  Classes.create({
-    idClass: uuidv4(),
-    className,
-    idTeacher,
-    students,
-    files,
-    status: status ? status : true,
-  }).then((data) => {
-    res.status(201).json({
-      data,
-      message: "Thành công!",
-      status: 200,
+  } else {
+    const { name, idTeacher, students, files, status } = req.body;
+    Classes.findOne({
+      where: {
+        name: req.body.name,
+      },
+    }).then((classes) => {
+      if (classes == null) {
+        Classes.create({
+          idClass: uuidv4(),
+          name,
+          idTeacher,
+          students,
+          files,
+          status: status ? status : true,
+        }).then((data) => {
+          res.status(201).json({
+            data,
+            message: "Thành công!",
+            status: 200,
+          });
+        });
+      } else {
+        res.status(404).json({
+          message: "Lớp đã tồn tại!",
+          status: 404,
+        });;
+      }
     });
-  });
+  }
 };
 
 exports.updateClass = async (req, res) => {
-  const { className, idTeacher, students, files, status } = req.body;
+  const { name, idTeacher, students, files, status } = req.body;
   const classes = await Classes.findOne({
-    where: { id: req.body.id },
+    where: { id: req.params.id },
   });
   if (classes == null) {
     res.status(401).json({
@@ -78,9 +92,20 @@ exports.updateClass = async (req, res) => {
       status: 401,
     });
   } else if (classes != null) {
-    classes
+    if (
+      !name ||
+      !idTeacher ||
+      name === "" ||
+      idTeacher === ""
+    ) {
+      res.status(400).json({
+        error: "Tên lớp học và giáo viên là bắt buộc!",
+        status: 400,
+      });
+    } else {
+      classes
       .update({
-        className,
+        name,
         idTeacher,
         students,
         files,
@@ -92,6 +117,7 @@ exports.updateClass = async (req, res) => {
           status: 200,
         });
       });
+    }
   } else {
     res.status(401).json({
       message: "Lớp học không tồn tại!",

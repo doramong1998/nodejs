@@ -60,10 +60,16 @@ exports.register = async (req, res) => {
         password: users.password,
         state: "Active",
       }).then(() => {
-        res.status(201).send("Successfull");
+        res.status(201).json({
+          message: "Tạo tài khoản thành công!",
+          status: 201,
+        });
       });
     } else {
-      res.status(404).send("Existed in database");
+      res.status(404).json({
+        message: "Email đã tồn tại!",
+        status: 404,
+      });;
     }
   });
 };
