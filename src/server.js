@@ -3,10 +3,14 @@ const bodyParser = require('body-parser');
 const port = 3000;
 const express = require('express');
 const cors = require('cors');
-// const nodemailer = require('nodemailer');
+var multer  = require('multer')
+var upload = multer({ dest: 'uploads' })
 const { withJWTAuthMiddleware } = require('express-kun');
+const uploadFile = require('./routes/uploadFile');
 const login = require('./routes/loginroutes');
-const classes = require('./routes/classesRoutes');
+const classes = require('./routes/classesRouters');
+const user = require('./routes/infoRouters');
+const { UserInfo, Classes } = require("./sequelize");
 require('dotenv').config();
 
 function getTokenFromBearer(req) {
@@ -28,6 +32,24 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+//class
+protectRouter.post('/classes/create', classes.createClass);
+protectRouter.put('/classes/update/:id', classes.updateClass);
+protectRouter.delete('/classes/delete', classes.deleteClass);
+protectRouter.get('/classes', classes.getClass);
+//user
+protectRouter.get('/users/me', user.getMe);
+protectRouter.put('/users/updateMe', user.updateMe);
+protectRouter.post('/users/create', user.createInfoUser);
+protectRouter.put('/users/update/:id', user.updateInfoUser);
+protectRouter.delete('/users/delete', user.deleteInfoUser);
+protectRouter.get('/users', user.getInfoUser);
+protectRouter.get('/users/getTeacher', user.getTeacher);
+//upload file
+protectRouter.post('/upload/media', upload.single('file'), uploadFile.uploadFile);
+protectRouter.get('/getMyFile', uploadFile.getFile);
+//login
 router.post('/register', login.register);
 router.post('/forgot', login.forgot);
 router.post('/reset/:token', login.reset);
@@ -35,13 +57,8 @@ router.post('/login', login.login);
 router.post('/update', login.update);
 router.post('/update1/:id', login.update1);
 router.post('/updateState/:id', login.updateState);
-protectRouter.get('/users/me', login.getMe);
-protectRouter.post('/classes/create', classes.createClass);
-protectRouter.put('/classes/update/:id', classes.updateClass);
-protectRouter.delete('/classes/delete', classes.deleteClass);
-protectRouter.get('/classes', classes.getClass);
-protectRouter.get('/:id', login.get);
-protectRouter.get('/', login.getAll);
+protectRouter.get('/account/:id', login.get);
+protectRouter.get('/account', login.getAll);
 // router.post('/forgot-password',)
 app.use('/api', router);
 

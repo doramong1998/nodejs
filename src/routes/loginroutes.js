@@ -29,11 +29,11 @@ connection.connect((err) => {
 });
 exports.register = async (req, res) => {
   if (
-    req.body.email === "" ||
     req.body.username === "" ||
+    req.body.email === "" ||
     req.body.password === ""
   ) {
-    res.status(400).send("Your cannot have invalid  value.");
+    res.status(400).send("Các trường không được để trống");
   }
   const { password } = req.body;
   const encryptedPassword = await bcrypt
@@ -43,22 +43,22 @@ exports.register = async (req, res) => {
     });
   const users = {
     username: req.body.username,
-    email: req.body.email,
     password: encryptedPassword,
+    email: req.body.email,
   };
 
   User.findOne({
     where: {
-      email: req.body.email,
+      username: req.body.username,
     },
   }).then((user) => {
     if (user == null) {
       User.create({
-        username: users.username,
         idUser: uuidv4(),
+        username: users.username,
         email: users.email,
         password: users.password,
-        state: "Active",
+        state: true,
       }).then(() => {
         res.status(201).json({
           message: "Tạo tài khoản thành công!",
@@ -67,28 +67,29 @@ exports.register = async (req, res) => {
       });
     } else {
       res.status(404).json({
-        message: "Email đã tồn tại!",
+        message: "Tài khoản đã tồn tại!",
         status: 404,
-      });;
+      });
     }
   });
 };
 // eslint-disable-next-line func-names
 exports.login = async function (req, res, err) {
   const userLogin = {
-    email: req.body.email,
+    username: req.body.username,
     password: req.body.password,
   };
-  if (err) {
-    // eslint-disable-next-line no-console
-    console.log(err);
-  }
   const user = await User.findOne({
     where: {
-      email: userLogin.email,
+      username: userLogin.username,
     },
   });
-  if (user == null) {
+  const userInfo = await UserInfo.findOne({
+    where: {
+      username: userLogin.username,
+    },
+  });
+  if (user == null || !userInfo?.status) {
     res.status(400).json({
       message: "Tài khoản hoặc mật khẩu không đúng",
       status: 400,
@@ -99,14 +100,11 @@ exports.login = async function (req, res, err) {
       const accessToken = jwt.sign({ user }, accessTokenSecret, {
         expiresIn: "24h",
       });
-      // user.update({
-      //   state: 'Active',
-      // });
       res.json({
         id: user.id,
         accessToken,
-        message: "Login successfull.",
-        state: user.state,
+        permissionId: userInfo?.permissionId.toString(),
+        message: "Đăng nhập thành công!",
       });
     } else {
       res.status(400).json({
@@ -137,17 +135,24 @@ exports.forgot = async function forgot(req, res) {
       });
       const mailHost = "smtp.gmail.com";
       const mailPort = 587;
+      const user123 = "minhlaso1hay2@gmail.com";
+      const pass123= "huy123456";
+      console.log("user",user123);
+      console.log("123123", pass123);
       const transporter = nodemailer.createTransport({
-        host: mailHost,
-        port: mailPort,
-        secure: false,
+        // host: mailHost,
+        // port: mailPort,
+        // secure: false,
+        service: 'gmail',
         auth: {
-          user: `${process.env.EMAIL_ADDRESS}`,
-          pass: `${process.env.EMAIL_PASSWORD}`,
+          // user: `${process.env.EMAIL_ADDRESS}`,
+          // pass: `${process.env.EMAIL_PASSWORD}`,
+          user: user123,
+          pass: pass123
         },
       });
       const mailOptions = {
-        from: `${process.env.EMAIL_ADDRESS}`,
+        from:  "minhlaso1hay2@gmail.com",
         to: `${user.email}`,
         subject: "Link to Reset",
         text:
@@ -176,7 +181,7 @@ exports.getAll = async function (req, res) {
   const user = await User.findAll({});
   res.json({
     user,
-    message: "create user successfully",
+    message: "Thành công!",
   });
 };
 
@@ -189,7 +194,7 @@ exports.get = async function (req, res) {
   console.log("id", req.params.id);
   res.json({
     user,
-    message: "create user successfully",
+    message: "Thành công!",
   });
 };
 // eslint-disable-next-line func-names
@@ -291,24 +296,4 @@ exports.updateState = async (req, res) => {
       message: "Ok",
     });
   }
-};
-
-exports.getMe = async (req, res) => {
-  const token = req.headers.authorization.split("Bearer ")[1];
-  jwt.verify(token, accessTokenSecret, (err, user) => {
-    if (err) {
-      return res.sendStatus(403);
-    }
-    req.user = user;
-  });
-  const userInfo = await UserInfo.findOne({
-    where: {
-      idUser:req.user.user.idUser,
-    },
-  });
-  res.status(200).json({
-    message: "Thành công!",
-    data: userInfo,
-    status: 200
-  });
 };

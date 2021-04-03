@@ -8,14 +8,13 @@ module.exports = (sequelize, type) => sequelize.define('userInfo', {
       type: type.STRING,
       allowNull: false,
     },
-    lastName: {
+    username: {
       type: type.STRING,
       allowNull: false,
     },
-    firstName: {
+    fullName: {
       type: type.STRING,
       allowNull: false,
-  
     },
     gender: {
       type: type.STRING, 
@@ -38,11 +37,14 @@ module.exports = (sequelize, type) => sequelize.define('userInfo', {
     email: {
       type: type.STRING,
     },
-    permission: {
-      type: type.STRING,
+    permissionId: {
+      type: type.INTEGER,
     },
     avatar: {
       type: type.STRING,
+    },
+    status: {
+      type: type.BOOLEAN,
     },
   }, {
     tableName: 'user_info',

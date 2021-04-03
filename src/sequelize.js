@@ -23,7 +23,9 @@ const UserClass = UserClassModel(sequelize, Sequelize);
 const UserFile = UserFileModel(sequelize, Sequelize);
 
 sequelize.sync().then(() => {
-  console.log("-----------------------------------------------------------------------------------------------");
+  console.log(
+    "-----------------------------------------------------------------------------------------------"
+  );
 });
 
 module.exports = {
