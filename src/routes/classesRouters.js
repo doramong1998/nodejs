@@ -13,16 +13,6 @@ require("dotenv").config();
 const accessTokenSecret = "yourSecretKey";
 const saltRounds = 10;
 
-// var storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, 'uploads')
-//   },
-//   filename: function (req, file, cb) {
-//     cb(null, file.fieldname + '-' + Date.now())
-//   }
-// })
- 
-// var upload = multer({ storage: storage })
 const connection = mysql.createConnection({
   host: "localhost",
   user: "tranquanghuy",
@@ -42,14 +32,16 @@ connection.connect((err) => {
 
 exports.getClass = async (req, res) => {
   const data = await Classes.findAll({});
-  const newData = await Promise.all(data?.map(async(item) => {
-    const teacher = await UserInfo.findOne({
-      where: {
-        idUser: item.dataValues.idTeacher,
-      }
+  const newData = await Promise.all(
+    data?.map(async (item) => {
+      const teacher = await UserInfo.findOne({
+        where: {
+          idUser: item.dataValues.idTeacher,
+        },
+      });
+      return { ...item.dataValues, teacher: teacher?.dataValues };
     })
-    return { ...item.dataValues, teacher: teacher?.dataValues };
-  }));
+  );
   res.json({
     data: newData,
     message: "Thành công!",
@@ -69,7 +61,14 @@ exports.createClass = async (req, res) => {
       status: 400,
     });
   } else {
-    const { name, idTeacher, students, files, status, studentNum } = req.body;
+    const {
+      name,
+      idTeacher,
+      files,
+      status,
+      studentNum,
+      totalStudent,
+    } = req.body;
     Classes.findOne({
       where: {
         name: req.body.name,
@@ -80,10 +79,11 @@ exports.createClass = async (req, res) => {
           idClass: uuidv4(),
           name,
           idTeacher,
-          students,
+
           files,
           studentNum,
           status,
+          totalStudent,
         }).then((data) => {
           res.status(201).json({
             data,
@@ -102,7 +102,7 @@ exports.createClass = async (req, res) => {
 };
 
 exports.updateClass = async (req, res) => {
-  const { name, idTeacher, students, files, status, studentNum } = req.body;
+  const { name, idTeacher, files, status, studentNum, totalStudent } = req.body;
   const classes = await Classes.findOne({
     where: { id: req.params.id },
   });
@@ -122,10 +122,11 @@ exports.updateClass = async (req, res) => {
         .update({
           name,
           idTeacher,
-          students,
+
           files,
           studentNum,
           status,
+          totalStudent,
         })
         .then(() => {
           res.status(200).json({

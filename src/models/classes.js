@@ -1,5 +1,3 @@
-const User = require('./infoUser');
-
 module.exports = (sequelize, type) => {
   var classes = sequelize.define(
     "classes",
@@ -20,17 +18,10 @@ module.exports = (sequelize, type) => {
       studentNum: {
         type: type.INTEGER,
       },
+      totalStudent: {
+        type: type.INTEGER,
+      },
       idTeacher: {
-        type: type.STRING,
-        references: {
-          model: User, 
-          key: 'idUser',
-       }
-      },
-      students: {
-        type: type.STRING,
-      },
-      files: {
         type: type.STRING,
       },
       status: {

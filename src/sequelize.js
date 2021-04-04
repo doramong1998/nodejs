@@ -7,6 +7,8 @@ const FileModel = require("./models/files");
 const PermissonModel = require("./models/permisson");
 const UserClassModel = require("./models/userClass");
 const UserFileModel = require("./models/userFile");
+const SubjectsModel = require("./models/subjects");
+const FileSubjectsModel = require("./models/fileSubject");
 const sequelize = new Sequelize("database", "tranquanghuy", "123456", {
   host: "localhost",
   dialect: "mysql",
@@ -21,6 +23,8 @@ const Files = FileModel(sequelize, Sequelize);
 const Permisson = PermissonModel(sequelize, Sequelize);
 const UserClass = UserClassModel(sequelize, Sequelize);
 const UserFile = UserFileModel(sequelize, Sequelize);
+const Subjects = SubjectsModel(sequelize, Sequelize);
+const FileSubjects = FileSubjectsModel(sequelize, Sequelize);
 
 sequelize.sync().then(() => {
   console.log(
@@ -37,4 +41,6 @@ module.exports = {
   Permisson,
   UserClass,
   UserFile,
+  Subjects,
+  FileSubjects
 };
