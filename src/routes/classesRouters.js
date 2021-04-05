@@ -8,7 +8,7 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const { Op } = require("sequelize");
 
-const { Classes, UserInfo } = require("../sequelize");
+const { Classes, UserInfo, UserClass } = require("../sequelize");
 require("dotenv").config();
 const accessTokenSecret = "yourSecretKey";
 const saltRounds = 10;
@@ -163,6 +163,48 @@ exports.deleteClass = async (req, res) => {
     res.status(401).json({
       message: "Lớp học không tồn tại!",
       status: 401,
+    });
+  }
+};
+
+exports.getDetailClass = async (req, res) => {
+  const classes = await Classes.findOne({
+    where: { id: req.params.id },
+  });
+  if (classes == null) {
+    res.status(401).json({
+      message: "Lớp học không tồn tại!",
+      status: 401,
+    });
+  } else if (classes != null) {
+    const teacher = await UserInfo.findOne({
+      where: {
+        idUser: classes.dataValues.idTeacher,
+      },
+    });
+    const allIdUser = await UserClass.findAll({
+      where: { idClass: classes.dataValues.idClass },
+    });
+    const newDataUser = await Promise.all(
+      allIdUser?.map(async (item) => {
+        const user = await UserInfo.findOne({
+          where: {
+            idUser: item.dataValues.idUser,
+          },
+        });
+        return user?.dataValues;
+      })
+    );
+
+    const newClass = {
+      ...classes.dataValues,
+      teacher: teacher.dataValues,
+      students: newDataUser,
+    };
+    return res.status(200).json({
+      message: "Thành công!",
+      data: newClass,
+      status: 200,
     });
   }
 };

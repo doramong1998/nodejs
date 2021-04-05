@@ -4,7 +4,20 @@ const port = 3000;
 const express = require("express");
 const cors = require("cors");
 var multer = require("multer");
-var upload = multer({ dest: "uploads" });
+var upload = multer({
+  dest: "uploads",
+  destination: function (req, file, cb) {
+    cb(null, config.DIR);
+  },
+  filename: function (req, file, cb) {
+    let ext = file.originalname.substring(
+      file.originalname.lastIndexOf("."),
+      file.originalname.length
+    );
+    cb(null, Date.now() + ext);
+  },
+});
+
 const { withJWTAuthMiddleware } = require("express-kun");
 const uploadFile = require("./routes/uploadFile");
 const login = require("./routes/loginroutes");
@@ -42,6 +55,7 @@ protectRouter.post("/classes/create", classes.createClass);
 protectRouter.put("/classes/update/:id", classes.updateClass);
 protectRouter.delete("/classes/delete", classes.deleteClass);
 protectRouter.get("/classes", classes.getClass);
+protectRouter.get("/classes/detail/:id", classes.getDetailClass);
 //user
 protectRouter.get("/users/me", user.getMe);
 protectRouter.put("/users/updateMe", user.updateMe);
