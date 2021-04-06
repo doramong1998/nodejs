@@ -107,9 +107,9 @@ exports.updateClass = async (req, res) => {
     where: { id: req.params.id },
   });
   if (classes == null) {
-    res.status(401).json({
+    res.status(400).json({
       message: "Lớp học không tồn tại!",
-      status: 401,
+      status: 400,
     });
   } else if (classes != null) {
     if (!name || !idTeacher || name === "" || idTeacher === "") {
@@ -136,9 +136,9 @@ exports.updateClass = async (req, res) => {
         });
     }
   } else {
-    res.status(401).json({
+    res.status(400).json({
       message: "Lớp học không tồn tại!",
-      status: 401,
+      status: 400,
     });
   }
 };
@@ -148,9 +148,9 @@ exports.deleteClass = async (req, res) => {
     where: { id: req.body.id },
   });
   if (classes == null) {
-    res.status(401).json({
+    res.status(400).json({
       message: "Lớp học không tồn tại!",
-      status: 401,
+      status: 400,
     });
   } else if (classes != null) {
     classes.destroy().then(() => {
@@ -160,9 +160,9 @@ exports.deleteClass = async (req, res) => {
       });
     });
   } else {
-    res.status(401).json({
+    res.status(400).json({
       message: "Lớp học không tồn tại!",
-      status: 401,
+      status: 400,
     });
   }
 };
@@ -172,9 +172,9 @@ exports.getDetailClass = async (req, res) => {
     where: { id: req.params.id },
   });
   if (classes == null) {
-    res.status(401).json({
+    res.status(400).json({
       message: "Lớp học không tồn tại!",
-      status: 401,
+      status: 400,
     });
   } else if (classes != null) {
     const teacher = await UserInfo.findOne({
@@ -205,6 +205,40 @@ exports.getDetailClass = async (req, res) => {
       message: "Thành công!",
       data: newClass,
       status: 200,
+    });
+  }
+};
+
+exports.addStudentToClass = async (req, res) => {
+  const { idUser, idClass } = req.body;
+  const userClass = await UserClass.findOne({
+    where: { idUser: idUser },
+  });
+  if (userClass != null) {
+    userClass
+      .update({
+        idClass,
+      })
+      .then(() => {
+        res.status(200).json({
+          message: "Thành công!",
+          status: 200,
+        });
+      });
+  } else if (userClass == null) {
+    UserClass.create({
+      idUser,
+      idClass,
+    }).then(() => {
+      res.status(200).json({
+        message: "Thành công!",
+        status: 200,
+      });
+    });
+  } else {
+    res.status(400).json({
+      error: "Sinh viên đã ở trong lớp!",
+      status: 400,
     });
   }
 };

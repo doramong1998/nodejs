@@ -7,7 +7,7 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const { Op } = require("sequelize");
-const { UserInfo, User } = require("../sequelize");
+const { UserInfo, User, UserClass } = require("../sequelize");
 require("dotenv").config();
 const accessTokenSecret = "yourSecretKey";
 const saltRounds = 10;
@@ -94,6 +94,10 @@ exports.createInfoUser = async (req, res) => {
           username,
           status,
         }).then((data) => {
+          UserClass.create({
+            idUser,
+            idClass,
+          });
           User.create({
             idUser,
             username,
@@ -135,33 +139,48 @@ exports.updateInfoUser = async (req, res) => {
     where: { id: req.params.id },
   });
   if (userInfo == null) {
-    res.status(401).json({
+    res.status(400).json({
       error: "Tài khoản không tồn tại!",
-      status: 401,
+      status: 400,
     });
   } else if (userInfo != null) {
-    userInfo.update({
-      fullName,
-      gender,
-      dob,
-      idClass,
-      studentId,
-      address,
-      phone,
-      email,
-      permissionId,
-      avatar,
-      status,
-    }).then(() => {
-      res.status(200).json({
-        message: "Thành công!",
-        status: 200,
-      });
+    const userClass = await UserClass.findOne({
+      where: { idUser: userInfo.idUser },
     });
+    if (userClass == null) {
+      UserClass.create({
+        idUser: userInfo.idUser,
+        idClass,
+      });
+    } else {
+      userClass.update({
+        idClass,
+      });
+    }
+    userInfo
+      .update({
+        fullName,
+        gender,
+        dob,
+        idClass,
+        studentId,
+        address,
+        phone,
+        email,
+        permissionId,
+        avatar,
+        status,
+      })
+      .then(() => {
+        res.status(200).json({
+          message: "Thành công!",
+          status: 200,
+        });
+      });
   } else {
-    res.status(401).json({
+    res.status(400).json({
       error: "Tài khoản không tồn tại!",
-      status: 401,
+      status: 400,
     });
   }
 };
@@ -171,9 +190,9 @@ exports.deleteInfoUser = async (req, res) => {
     where: { id: req.body.id },
   });
   if (userInfo == null) {
-    res.status(401).json({
+    res.status(400).json({
       error: "Tài khoản không tồn tại!",
-      status: 401,
+      status: 400,
     });
   } else if (userInfo != null) {
     const user = await User.findOne({
@@ -188,9 +207,9 @@ exports.deleteInfoUser = async (req, res) => {
       })
     );
   } else {
-    res.status(401).json({
+    res.status(400).json({
       error: "Tài khoản không tồn tại!",
-      status: 401,
+      status: 400,
     });
   }
 };
@@ -240,31 +259,46 @@ exports.updateMe = async (req, res) => {
     },
   });
   if (userInfo == null) {
-    res.status(401).json({
+    res.status(400).json({
       error: "Tài khoản không tồn tại!",
-      status: 401,
+      status: 400,
     });
   } else if (userInfo != null) {
-    userInfo.update({
-      fullName,
-      gender,
-      dob,
-      idClass,
-      studentId,
-      address,
-      phone,
-      email,
-      avatar,
-    }).then(() => {
-      res.status(200).json({
-        message: "Thành công!",
-        status: 200,
-      });
+    const userClass = await UserClass.findOne({
+      where: { idUser: req.user.user.idUser },
     });
+    if (userClass == null) {
+      UserClass.create({
+        idUser: req.user.user.idUser,
+        idClass,
+      });
+    } else {
+      userClass.update({
+        idClass,
+      });
+    }
+    userInfo
+      .update({
+        fullName,
+        gender,
+        dob,
+        idClass,
+        studentId,
+        address,
+        phone,
+        email,
+        avatar,
+      })
+      .then(() => {
+        res.status(200).json({
+          message: "Thành công!",
+          status: 200,
+        });
+      });
   } else {
-    res.status(401).json({
+    res.status(400).json({
       error: "Tài khoản không tồn tại!",
-      status: 401,
+      status: 400,
     });
   }
 };
@@ -273,6 +307,19 @@ exports.getTeacher = async (req, res) => {
   const data = await UserInfo.findAll({
     where: {
       permissionId: 2,
+    },
+  });
+  res.status(200).json({
+    message: "Thành công!",
+    data,
+    status: 200,
+  });
+};
+
+exports.getStudent = async (req, res) => {
+  const data = await UserInfo.findAll({
+    where: {
+      permissionId: 3,
     },
   });
   res.status(200).json({

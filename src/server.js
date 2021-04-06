@@ -56,6 +56,7 @@ protectRouter.put("/classes/update/:id", classes.updateClass);
 protectRouter.delete("/classes/delete", classes.deleteClass);
 protectRouter.get("/classes", classes.getClass);
 protectRouter.get("/classes/detail/:id", classes.getDetailClass);
+protectRouter.post("/classes/addStudentToClass", classes.addStudentToClass);
 //user
 protectRouter.get("/users/me", user.getMe);
 protectRouter.put("/users/updateMe", user.updateMe);
@@ -64,6 +65,7 @@ protectRouter.put("/users/update/:id", user.updateInfoUser);
 protectRouter.delete("/users/delete", user.deleteInfoUser);
 protectRouter.get("/users", user.getInfoUser);
 protectRouter.get("/users/getTeacher", user.getTeacher);
+protectRouter.get("/users/getStudent", user.getStudent);
 //upload file
 protectRouter.post(
   "/upload/media",
