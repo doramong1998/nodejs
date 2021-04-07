@@ -9,7 +9,6 @@ module.exports = (sequelize, type) =>
       },
       idPoint: {
         type: type.STRING,
-        allowNull: false,
       },
       idSubject: {
         type: type.STRING,

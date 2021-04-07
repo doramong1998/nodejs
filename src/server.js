@@ -57,6 +57,7 @@ protectRouter.delete("/classes/delete", classes.deleteClass);
 protectRouter.get("/classes", classes.getClass);
 protectRouter.get("/classes/detail/:id", classes.getDetailClass);
 protectRouter.post("/classes/addStudentToClass", classes.addStudentToClass);
+protectRouter.post("/classes/changeTeacherClass", classes.changeTeacherClass);
 //user
 protectRouter.get("/users/me", user.getMe);
 protectRouter.put("/users/updateMe", user.updateMe);
@@ -77,6 +78,12 @@ protectRouter.get("/getMyFile", uploadFile.getFile);
 protectRouter.post("/subject/create", subject.createSubject);
 protectRouter.put("/subject/update/:id", subject.updateSubject);
 protectRouter.delete("/subject/delete", subject.deleteSubject);
+protectRouter.get("/subject/detail/:id", subject.getDetailSubject);
+protectRouter.post("/subject/addStudentToSubject", subject.addStudentToSubject);
+protectRouter.post(
+  "/subject/changeTeacherSubject",
+  subject.changeTeacherSubject
+);
 protectRouter.get("/subject", subject.getSubject);
 //login
 router.post("/register", login.register);

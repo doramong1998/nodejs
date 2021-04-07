@@ -7,7 +7,7 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const { Op } = require("sequelize");
-
+const _ = require("lodash");
 const { Classes, UserInfo, UserClass } = require("../sequelize");
 require("dotenv").config();
 const accessTokenSecret = "yourSecretKey";
@@ -190,6 +190,7 @@ exports.getDetailClass = async (req, res) => {
         const user = await UserInfo.findOne({
           where: {
             idUser: item.dataValues.idUser,
+            permissionId: 3,
           },
         });
         return user?.dataValues;
@@ -199,7 +200,7 @@ exports.getDetailClass = async (req, res) => {
     const newClass = {
       ...classes.dataValues,
       teacher: teacher.dataValues,
-      students: newDataUser,
+      students: _.compact(newDataUser),
     };
     return res.status(200).json({
       message: "Thành công!",
@@ -238,6 +239,52 @@ exports.addStudentToClass = async (req, res) => {
   } else {
     res.status(400).json({
       error: "Sinh viên đã ở trong lớp!",
+      status: 400,
+    });
+  }
+};
+
+exports.changeTeacherClass = async (req, res) => {
+  const { idUser, idClass } = req.body;
+  const userClass = await UserClass.findOne({
+    where: { idUser: idUser },
+  });
+  if (userClass != null) {
+    const classes = await Classes.findOne({
+      where: { idClass: idClass },
+    });
+    classes.update({
+      idTeacher: idUser,
+    });
+    userClass
+      .update({
+        idClass,
+      })
+      .then(() => {
+        res.status(200).json({
+          message: "Thành công!",
+          status: 200,
+        });
+      });
+  } else if (userClass == null) {
+    const classes = await Classes.findOne({
+      where: { idClass: idClass },
+    });
+    classes.update({
+      idTeacher: idUser,
+    });
+    UserClass.create({
+      idUser,
+      idClass,
+    }).then(() => {
+      res.status(200).json({
+        message: "Thành công!",
+        status: 200,
+      });
+    });
+  } else {
+    res.status(400).json({
+      error: "Không thể thêm giáo viên vào lớp!",
       status: 400,
     });
   }
