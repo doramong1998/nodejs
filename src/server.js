@@ -24,6 +24,7 @@ const login = require("./routes/loginroutes");
 const classes = require("./routes/classesRouters");
 const user = require("./routes/infoRouters");
 const subject = require("./routes/subjectRouter");
+const point = require("./routes/pointRouter");
 require("dotenv").config();
 
 function getTokenFromBearer(req) {
@@ -58,6 +59,12 @@ protectRouter.get("/classes", classes.getClass);
 protectRouter.get("/classes/detail/:id", classes.getDetailClass);
 protectRouter.post("/classes/addStudentToClass", classes.addStudentToClass);
 protectRouter.post("/classes/changeTeacherClass", classes.changeTeacherClass);
+protectRouter.delete(
+  "/classes/deleteStudentFromClass",
+  classes.deleteStudentFromClass
+);
+protectRouter.post("/classes/getPointStudent", classes.getPointStudent);
+protectRouter.post("/classes/getClassBytStudent", classes.getClassBytStudent);
 //user
 protectRouter.get("/users/me", user.getMe);
 protectRouter.put("/users/updateMe", user.updateMe);
@@ -84,7 +91,13 @@ protectRouter.post(
   "/subject/changeTeacherSubject",
   subject.changeTeacherSubject
 );
+protectRouter.delete(
+  "/subject/deleteStudentFromSubject",
+  subject.deleteStudentFromSubject
+);
 protectRouter.get("/subject", subject.getSubject);
+// point
+protectRouter.post("/point/updatePoint", point.updatePoint);
 //login
 router.post("/register", login.register);
 router.post("/forgot", login.forgot);

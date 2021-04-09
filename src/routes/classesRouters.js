@@ -1,17 +1,15 @@
-// import User from '../sequelize';
-
-const bcrypt = require("bcrypt");
-const crypto = require("crypto");
 const mysql = require("mysql");
-const nodemailer = require("nodemailer");
-const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
-const { Op } = require("sequelize");
 const _ = require("lodash");
-const { Classes, UserInfo, UserClass } = require("../sequelize");
+const {
+  Classes,
+  UserInfo,
+  UserClass,
+  PointUserSubject,
+  Point,
+  Subjects,
+} = require("../sequelize");
 require("dotenv").config();
-const accessTokenSecret = "yourSecretKey";
-const saltRounds = 10;
 
 const connection = mysql.createConnection({
   host: "localhost",
@@ -196,7 +194,6 @@ exports.getDetailClass = async (req, res) => {
         return user?.dataValues;
       })
     );
-
     const newClass = {
       ...classes.dataValues,
       teacher: teacher.dataValues,
@@ -216,6 +213,12 @@ exports.addStudentToClass = async (req, res) => {
     where: { idUser: idUser },
   });
   if (userClass != null) {
+    const userInfo = await UserInfo.findOne({
+      where: { idUser: idUser },
+    });
+    userInfo.update({
+      idClass,
+    });
     userClass
       .update({
         idClass,
@@ -288,4 +291,76 @@ exports.changeTeacherClass = async (req, res) => {
       status: 400,
     });
   }
+};
+
+exports.deleteStudentFromClass = async (req, res) => {
+  const { idUser, idClass } = req.body;
+  const userClass = await UserClass.findOne({
+    where: { idUser: idUser, idClass: idClass },
+  });
+  if (userClass != null) {
+    const userInfo = await UserInfo.findOne({
+      where: { idUser: idUser },
+    });
+    userInfo.update({
+      idClass: null,
+    });
+    userClass.destroy().then(() => {
+      res.status(200).json({
+        message: "Thành công!",
+        status: 200,
+      });
+    });
+  } else {
+    res.status(400).json({
+      error: "Sinh viên không ở trong lớp!",
+      status: 400,
+    });
+  }
+};
+
+exports.getPointStudent = async (req, res) => {
+  const { idUser, idSubject } = req.body;
+  const userPoint = await PointUserSubject.findOne({
+    where: { idUser: idUser, idSubject: idSubject },
+  });
+  if (userPoint == null) {
+    res.status(400).json({
+      data: null,
+      message: "Thành công!",
+      status: 400,
+    });
+  } else {
+    const point = await Point.findOne({
+      where: {
+        idPoint: userPoint.dataValues.idPoint,
+      },
+    });
+    return res.status(200).json({
+      message: "Thành công!",
+      data: point,
+      status: 200,
+    });
+  }
+};
+
+exports.getClassBytStudent = async (req, res) => {
+  const userPoint = await PointUserSubject.findAll({
+    where: { idUser: req.body.idUser },
+  });
+  const allClass = await Promise.all(
+    userPoint?.map(async (item) => {
+      const subjects = await Subjects.findOne({
+        where: {
+          idSubject: item.dataValues.idSubject,
+        },
+      });
+      return subjects;
+    })
+  );
+  return res.status(200).json({
+    message: "Thành công!",
+    data: allClass,
+    status: 200,
+  });
 };

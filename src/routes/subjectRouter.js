@@ -1,13 +1,8 @@
 const mysql = require("mysql");
-const nodemailer = require("nodemailer");
-const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
-const { Op } = require("sequelize");
 const _ = require("lodash");
-const { Subjects, UserInfo, PointUserSubject } = require("../sequelize");
+const { Subjects, UserInfo, PointUserSubject, Point } = require("../sequelize");
 require("dotenv").config();
-const accessTokenSecret = "yourSecretKey";
-const saltRounds = 10;
 
 const connection = mysql.createConnection({
   host: "localhost",
@@ -187,7 +182,12 @@ exports.getDetailSubject = async (req, res) => {
             permissionId: 3,
           },
         });
-        return user?.dataValues;
+        const point = await Point.findOne({
+          where: {
+            idPoint: item.dataValues.idPoint,
+          },
+        });
+        return user?.dataValues ? { ...user?.dataValues, point } : null;
       })
     );
     const newSubject = {
@@ -206,7 +206,7 @@ exports.getDetailSubject = async (req, res) => {
 exports.addStudentToSubject = async (req, res) => {
   const { idUser, idSubject } = req.body;
   const userSubject = await PointUserSubject.findOne({
-    where: { idUser: idUser },
+    where: { idUser: idUser, idSubject: idSubject },
   });
   if (userSubject != null) {
     userSubject
@@ -215,7 +215,7 @@ exports.addStudentToSubject = async (req, res) => {
       })
       .then(() => {
         res.status(200).json({
-          message: "Thành công 1!",
+          message: "Thành công!",
           status: 200,
         });
       });
@@ -225,7 +225,7 @@ exports.addStudentToSubject = async (req, res) => {
       idSubject,
     }).then(() => {
       res.status(200).json({
-        message: "Thành công 2!",
+        message: "Thành công!",
         status: 200,
       });
     });
@@ -278,6 +278,26 @@ exports.changeTeacherSubject = async (req, res) => {
   } else {
     res.status(400).json({
       error: "Không thể thêm giáo viên vào lớp!",
+      status: 400,
+    });
+  }
+};
+
+exports.deleteStudentFromSubject = async (req, res) => {
+  const { idUser, idSubject } = req.params;
+  const userSubject = await PointUserSubject.findOne({
+    where: { idUser: idUser, idSubject: idSubject },
+  });
+  if (userSubject != null) {
+    userSubject.destroy().then(() => {
+      res.status(200).json({
+        message: "Thành công!",
+        status: 200,
+      });
+    });
+  } else {
+    res.status(400).json({
+      error: "Sinh viên không ở trong môn học!",
       status: 400,
     });
   }
