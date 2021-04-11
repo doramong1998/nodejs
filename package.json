@@ -16,6 +16,7 @@
     "express-handlebars": "^5.1.0",
     "express-kun": "^1.0.24",
     "express-middleware-minio": "^3.1.0",
+    "fs": "^0.0.1-security",
     "lodash": "^4.17.21",
     "minio": "^7.0.18",
     "morgan": "^1.10.0",
@@ -27,7 +28,8 @@
     "nodemon": "^2.0.4",
     "sequelize": "^6.6.2",
     "sqlite3": "^5.0.0",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "virustotal-api": "^1.1.4"
   },
   "keywords": [
     "NodeJS",

@@ -11,12 +11,17 @@ const { Files } = require("../sequelize");
 const Minio = require("minio");
 require("dotenv").config();
 const accessTokenSecret = "yourSecretKey";
+const fs = require("fs");
+const VirusTotalApi = require("virustotal-api");
 // var cloudinary = require("cloudinary").v2;
 // cloudinary.config({
 //   cloud_name: "huy12312312a",
 //   api_key: "939978951671685",
 //   api_secret: "6ytwQMsjyxJcZKUzd662tLZb-_o",
 // });
+const virusTotal = new VirusTotalApi(
+  "51048b28ab891f17a50c22327a4d2414fe42f65d568a0a168712e204de2d975a"
+);
 
 var minioClient = new Minio.Client({
   endPoint: "minio.hisoft.com.vn",
@@ -53,48 +58,70 @@ exports.uploadFile = async (req, res, next) => {
   var metaData = {
     "Content-Type": req.file.mimetype,
   };
-  minioClient.fPutObject(
-    "huytq",
-    req.file.originalname,
-    req.file.path,
-    metaData,
-    function (error, etag) {
-      if (error) {
-        return res.status(400).json({
-          error: "Có lỗi xảy ra!",
-          status: 400,
-        });
-      }
-      minioClient.presignedGetObject(
-        "huytq",
-        req.file.originalname,
-        7 * 24 * 60 * 60,
-        function (err, presignedUrl) {
-          if (err)
-            return res.status(400).json({
-              error: "Có lỗi xảy ra!",
-              status: 400,
-            });
-          else {
-            Files.create({
-              idFile: uuidv4(),
-              name: req.file.originalname,
-              type: req.file.mimetype,
-              url: presignedUrl,
-              idUser: req.user.user.idUser,
-              status: true,
-            }).then((data) => {
-              res.status(201).json({
-                data,
-                message: "Thành công!",
-                status: 200,
-              });
-            });
-          }
+  virusTotal
+    .fileScan(req.file, req.file.originalname)
+    .then((response) => {
+      let resource = response.resource;
+      virusTotal.fileReport(resource).then((result) => {
+        if (result.positives > 0) {
+          res.status(400).json({
+            message: "File có nguy cơ chứa mã độc/virus, hủy tải lên!",
+            status: 400,
+          });
+        } else {
+          minioClient.fPutObject(
+            "huytq",
+            req.file.originalname,
+            req.file.path,
+            metaData,
+            function (error, etag) {
+              if (error) {
+                return res.status(400).json({
+                  error: "Có lỗi xảy ra!",
+                  status: 400,
+                });
+              }
+              minioClient.presignedGetObject(
+                "huytq",
+                req.file.originalname,
+                7 * 24 * 60 * 60,
+                function (err, presignedUrl) {
+                  if (err)
+                    return res.status(400).json({
+                      error: "Có lỗi xảy ra!",
+                      status: 400,
+                    });
+                  else {
+                    Files.create({
+                      idFile: uuidv4(),
+                      name: req.file.originalname,
+                      type: req.file.mimetype,
+                      url: presignedUrl,
+                      idUser: req.user.user.idUser,
+                      status: true,
+                    }).then((data) => {
+                      res.status(201).json({
+                        data,
+                        message: "Thành công!",
+                        status: 200,
+                      });
+                    });
+                  }
+                }
+              );
+            }
+          );
         }
-      );
-    }
-  );
+      });
+    })
+    .catch((err) =>
+      res.status(400).json({
+        message: "Có lỗi xảy ra, vui lòng thử lại!",
+        status: 400,
+      })
+    );
+
+  // Bỏ
   // if (req.file.mimetype === "application/pdf") {
   //   console.log("up raw");
   //   cloudinary.uploader

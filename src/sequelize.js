@@ -11,6 +11,7 @@ const SubjectsModel = require("./models/subjects");
 const FileSubjectsModel = require("./models/fileSubject");
 const PointModel = require("./models/point");
 const PointUserSubjectModel = require("./models/pointUserSubject");
+const AttendanceModal = require("./models/attendance");
 const sequelize = new Sequelize("database", "tranquanghuy", "123456", {
   host: "localhost",
   dialect: "mysql",
@@ -29,6 +30,7 @@ const Subjects = SubjectsModel(sequelize, Sequelize);
 const FileSubjects = FileSubjectsModel(sequelize, Sequelize);
 const Point = PointModel(sequelize, Sequelize);
 const PointUserSubject = PointUserSubjectModel(sequelize, Sequelize);
+const Attendance = AttendanceModal(sequelize, Sequelize);
 
 sequelize.sync().then(() => {
   console.log(
@@ -48,5 +50,6 @@ module.exports = {
   Subjects,
   FileSubjects,
   Point,
+  Attendance,
   PointUserSubject,
 };
