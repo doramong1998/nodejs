@@ -28,6 +28,9 @@ module.exports = (sequelize, type) => {
       lessonNum: {
         type: type.INTEGER,
       },
+      credit: {
+        type: type.INTEGER,
+      },
       idTeacher: {
         type: type.STRING,
       },

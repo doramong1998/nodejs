@@ -8,6 +8,7 @@ const {
   PointUserSubject,
   Point,
   Subjects,
+  Attendance,
 } = require("../sequelize");
 require("dotenv").config();
 
@@ -320,9 +321,9 @@ exports.deleteStudentFromClass = async (req, res) => {
 };
 
 exports.getPointStudent = async (req, res) => {
-  const { idUser, idSubject } = req.body;
-  const userPoint = await PointUserSubject.findOne({
-    where: { idUser: idUser, idSubject: idSubject },
+  const { idUser } = req.body;
+  const userPoint = await PointUserSubject.findAll({
+    where: { idUser: idUser },
   });
   if (userPoint == null) {
     res.status(400).json({
@@ -331,14 +332,35 @@ exports.getPointStudent = async (req, res) => {
       status: 400,
     });
   } else {
-    const point = await Point.findOne({
-      where: {
-        idPoint: userPoint.dataValues.idPoint,
-      },
-    });
+    const allPoint = await Promise.all(
+      userPoint?.map(async (item) => {
+        const subjects = await Subjects.findOne({
+          where: {
+            idSubject: item.dataValues.idSubject,
+          },
+        });
+        const point = await Point.findOne({
+          where: {
+            idPoint: item.dataValues.idPoint,
+          },
+        });
+        const attend = await Attendance.findAll({
+          where: {
+            idUser: idUser,
+            idSubject: item.dataValues.idSubject,
+          },
+        });
+        return subjects
+          ? {
+              ...subjects.dataValues,
+              point: { ...point.dataValues, pointDiligence: attend },
+            }
+          : null;
+      })
+    );
     return res.status(200).json({
       message: "Thành công!",
-      data: point,
+      data: _.compact(allPoint),
       status: 200,
     });
   }

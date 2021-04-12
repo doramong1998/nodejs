@@ -1,7 +1,13 @@
 const mysql = require("mysql");
 const { v4: uuidv4 } = require("uuid");
 const _ = require("lodash");
-const { Subjects, UserInfo, PointUserSubject, Point } = require("../sequelize");
+const {
+  Subjects,
+  UserInfo,
+  PointUserSubject,
+  Point,
+  Attendance,
+} = require("../sequelize");
 require("dotenv").config();
 
 const connection = mysql.createConnection({
@@ -187,7 +193,18 @@ exports.getDetailSubject = async (req, res) => {
             idPoint: item.dataValues.idPoint,
           },
         });
-        return user?.dataValues ? { ...user?.dataValues, point } : null;
+        const attend = await Attendance.findAll({
+          where: {
+            idUser: item.dataValues.idUser,
+            idSubject: element.dataValues.idSubject,
+          },
+        });
+        return user?.dataValues
+          ? {
+              ...user?.dataValues,
+              point: { ...point?.dataValues, pointDiligence: attend },
+            }
+          : null;
       })
     );
     const newSubject = {
