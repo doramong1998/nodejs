@@ -7,9 +7,12 @@ const {
   PointUserSubject,
   Point,
   Attendance,
+  FileSubjects,
+  Files,
 } = require("../sequelize");
 require("dotenv").config();
-
+const jwt = require("jsonwebtoken");
+const accessTokenSecret = "yourSecretKey";
 const connection = mysql.createConnection({
   host: "localhost",
   user: "tranquanghuy",
@@ -207,10 +210,26 @@ exports.getDetailSubject = async (req, res) => {
           : null;
       })
     );
+    const fileSubject = await FileSubjects.findAll({
+      where: {
+        idSubject: element.dataValues.idSubject,
+      },
+    });
+    const newData = await Promise.all(
+      fileSubject?.map(async (item) => {
+        const file = await Files.findOne({
+          where: {
+            idFile: item.dataValues.idFile,
+          },
+        });
+        return file?.dataValues;
+      })
+    );
     const newSubject = {
       ...element.dataValues,
       teacher: teacher?.dataValues || null,
       students: _.compact(newDataUser),
+      listFile: newData,
     };
     return res.status(200).json({
       message: "Thành công!",
@@ -318,4 +337,106 @@ exports.deleteStudentFromSubject = async (req, res) => {
       status: 400,
     });
   }
+};
+
+exports.getUserInSubject = async (req, res) => {
+  const token = req.headers.authorization.split("Bearer ")[1];
+  jwt.verify(token, accessTokenSecret, (err, user) => {
+    if (err) {
+      return res.sendStatus(403);
+    }
+    req.user = user;
+  });
+  const element = await Subjects.findOne({
+    where: { idSubject: req.params.idSubject },
+  });
+  if (element == null) {
+    res.status(400).json({
+      message: "Lớp học không tồn tại!",
+      status: 400,
+    });
+  } else if (element != null) {
+    const teacher = await UserInfo.findOne({
+      where: {
+        idUser: element.dataValues.idTeacher,
+      },
+    });
+    const userInfo = await UserInfo.findOne({
+      where: {
+        idUser: req.user.user.idUser,
+      },
+    });
+    const userPoint = await PointUserSubject.findOne({
+      where: {
+        idSubject: element.dataValues.idSubject,
+        idUser: req.user.user.idUser,
+      },
+    });
+    const point = await Point.findOne({
+      where: {
+        idPoint: userPoint.dataValues.idPoint,
+      },
+    });
+    const attend = await Attendance.findAll({
+      where: {
+        idUser: req.user.user.idUser,
+        idSubject: element.dataValues.idSubject,
+      },
+    });
+    const fileSubject = await FileSubjects.findAll({
+      where: {
+        idSubject: element.dataValues.idSubject,
+      },
+    });
+    const newData = await Promise.all(
+      fileSubject?.map(async (item) => {
+        const file = await Files.findOne({
+          where: {
+            idFile: item.dataValues.idFile,
+          },
+        });
+        return file?.dataValues;
+      })
+    );
+    const newSubject = {
+      ...element.dataValues,
+      teacher: teacher?.dataValues || null,
+      user: userInfo?.dataValues,
+      point: { ...point?.dataValues, pointDiligence: attend },
+      listFile: newData,
+    };
+    return res.status(200).json({
+      message: "Thành công!",
+      data: newSubject,
+      status: 200,
+    });
+  }
+};
+
+exports.getSubjectByMe = async (req, res) => {
+  const token = req.headers.authorization.split("Bearer ")[1];
+  jwt.verify(token, accessTokenSecret, (err, user) => {
+    if (err) {
+      return res.sendStatus(403);
+    }
+    req.user = user;
+  });
+  const userPoint = await PointUserSubject.findAll({
+    where: { idUser: req.user.user.idUser },
+  });
+  const allSubject = await Promise.all(
+    userPoint?.map(async (item) => {
+      const subjects = await Subjects.findOne({
+        where: {
+          idSubject: item.dataValues.idSubject,
+        },
+      });
+      return subjects;
+    })
+  );
+  return res.status(200).json({
+    message: "Thành công!",
+    data: allSubject,
+    status: 200,
+  });
 };

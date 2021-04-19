@@ -65,7 +65,7 @@ protectRouter.delete(
   classes.deleteStudentFromClass
 );
 protectRouter.post("/classes/getPointStudent", classes.getPointStudent);
-protectRouter.post("/classes/getClassBytStudent", classes.getClassBytStudent);
+protectRouter.post("/classes/getClassByStudent", classes.getClassByStudent);
 //user
 protectRouter.get("/users/me", user.getMe);
 protectRouter.put("/users/updateMe", user.updateMe);
@@ -81,7 +81,13 @@ protectRouter.post(
   upload.single("file"),
   uploadFile.uploadFile
 );
+protectRouter.post(
+  "/subject/upload/media",
+  upload.single("file"),
+  uploadFile.uploadFileSubject
+);
 protectRouter.get("/getMyFile", uploadFile.getFile);
+protectRouter.post("/addExpiredFile", uploadFile.addExpiredFile);
 //subject
 protectRouter.post("/subject/create", subject.createSubject);
 protectRouter.put("/subject/update/:id", subject.updateSubject);
@@ -97,6 +103,12 @@ protectRouter.delete(
   subject.deleteStudentFromSubject
 );
 protectRouter.get("/subject", subject.getSubject);
+protectRouter.get(
+  "/subject/getUserInSubject/:idSubject",
+  subject.getUserInSubject
+);
+
+protectRouter.get("/subject/getSubjectByMe", subject.getSubjectByMe);
 // point
 protectRouter.post("/point/updatePoint", point.updatePoint);
 // attend

@@ -7,7 +7,7 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const { Op } = require("sequelize");
-const { Files } = require("../sequelize");
+const { Files, UserFile, FileSubjects } = require("../sequelize");
 const Minio = require("minio");
 require("dotenv").config();
 const accessTokenSecret = "yourSecretKey";
@@ -92,8 +92,13 @@ exports.uploadFile = async (req, res, next) => {
                       status: 400,
                     });
                   else {
+                    const idFile = uuidv4();
+                    UserFile.create({
+                      idFile,
+                      idUser: req.user.user.idUser,
+                    });
                     Files.create({
-                      idFile: uuidv4(),
+                      idFile,
                       name: req.file.originalname,
                       type: req.file.mimetype,
                       url: presignedUrl,
@@ -120,47 +125,86 @@ exports.uploadFile = async (req, res, next) => {
         status: 400,
       })
     );
+};
 
-  // Bỏ
-  // if (req.file.mimetype === "application/pdf") {
-  //   console.log("up raw");
-  //   cloudinary.uploader
-  //     .upload(req.file.path, { resource_type: "raw" })
-  //     .then((result) => {
-  //       Files.create({
-  //         idFile: uuidv4(),
-  //         name: req.file.originalname,
-  //         type: req.file.mimetype,
-  //         url: result.url,
-  //         idUser: req.user.user.idUser,
-  //         status: true,
-  //       }).then((data) => {
-  //         res.status(201).json({
-  //           data,
-  //           message: "Thành công!",
-  //           status: 200,
-  //         });
-  //       });
-  //     });
-  // } else
-  //   cloudinary.uploader
-  //     .upload(req.file.path, { resource_type: "auto" })
-  //     .then((result) => {
-  //       Files.create({
-  //         idFile: uuidv4(),
-  //         name: req.file.originalname,
-  //         type: req.file.mimetype,
-  //         url: result.url,
-  //         idUser: req.user.user.idUser,
-  //         status: true,
-  //       }).then((data) => {
-  //         res.status(201).json({
-  //           data,
-  //           message: "Thành công!",
-  //           status: 200,
-  //         });
-  //       });
-  //     });
+exports.uploadFileSubject = async (req, res, next) => {
+  const token = req.headers.authorization.split("Bearer ")[1];
+  jwt.verify(token, accessTokenSecret, (err, user) => {
+    if (err) {
+      return res.sendStatus(403);
+    }
+    req.user = user;
+  });
+  var metaData = {
+    "Content-Type": req.file.mimetype,
+  };
+  virusTotal
+    .fileScan(req.file, req.file.originalname)
+    .then((response) => {
+      let resource = response.resource;
+      virusTotal.fileReport(resource).then((result) => {
+        if (result.positives > 0) {
+          res.status(400).json({
+            message: "File có nguy cơ chứa mã độc/virus, hủy tải lên!",
+            status: 400,
+          });
+        } else {
+          minioClient.fPutObject(
+            "huytq",
+            req.file.originalname,
+            req.file.path,
+            metaData,
+            function (error, etag) {
+              if (error) {
+                return res.status(400).json({
+                  error: "Có lỗi xảy ra!",
+                  status: 400,
+                });
+              }
+              minioClient.presignedGetObject(
+                "huytq",
+                req.file.originalname,
+                7 * 24 * 60 * 60,
+                function (err, presignedUrl) {
+                  if (err)
+                    return res.status(400).json({
+                      error: "Có lỗi xảy ra!",
+                      status: 400,
+                    });
+                  else {
+                    const idFile = uuidv4();
+                    FileSubjects.create({
+                      idFile,
+                      idSubject: req.body.idSubject,
+                    });
+                    Files.create({
+                      idFile,
+                      name: req.file.originalname,
+                      type: req.file.mimetype,
+                      url: presignedUrl,
+                      idUser: req.user.user.idUser,
+                      status: true,
+                    }).then((data) => {
+                      res.status(201).json({
+                        data,
+                        message: "Thành công!",
+                        status: 200,
+                      });
+                    });
+                  }
+                }
+              );
+            }
+          );
+        }
+      });
+    })
+    .catch((err) =>
+      res.status(400).json({
+        message: "Có lỗi xảy ra, vui lòng thử lại!",
+        status: 400,
+      })
+    );
 };
 
 exports.getFile = async (req, res, next) => {
@@ -186,7 +230,7 @@ exports.getFile = async (req, res, next) => {
 exports.addExpiredFile = async (req, res) => {
   const file = await Files.findOne({
     where: {
-      id: req.body.id,
+      idFile: req.body.idFile,
     },
   });
   minioClient.presignedGetObject(
@@ -205,6 +249,7 @@ exports.addExpiredFile = async (req, res) => {
             url: presignedUrl,
           })
           .then((data) => {
+            console.log(data);
             return res.status(201).json({
               data,
               message: "Gia hạn thành công!",

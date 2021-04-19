@@ -366,7 +366,7 @@ exports.getPointStudent = async (req, res) => {
   }
 };
 
-exports.getClassBytStudent = async (req, res) => {
+exports.getClassByStudent = async (req, res) => {
   const userPoint = await PointUserSubject.findAll({
     where: { idUser: req.body.idUser },
   });
