@@ -1,13 +1,13 @@
 module.exports = (sequelize, type) =>
   sequelize.define(
-    "subject_file",
+    "class_file",
     {
       id: {
         type: type.INTEGER,
         primaryKey: true,
         autoIncrement: true,
       },
-      idSubject: {
+      idClass: {
         type: type.STRING,
         allowNull: false,
       },
@@ -17,7 +17,7 @@ module.exports = (sequelize, type) =>
       },
     },
     {
-      tableName: "subject_file",
+      tableName: "class_file",
       timestamps: false,
     }
   );

@@ -66,6 +66,8 @@ protectRouter.delete(
 );
 protectRouter.post("/classes/getPointStudent", classes.getPointStudent);
 protectRouter.post("/classes/getClassByStudent", classes.getClassByStudent);
+protectRouter.get("/classes/getClassByMe", classes.getClassByMe);
+
 //user
 protectRouter.get("/users/me", user.getMe);
 protectRouter.put("/users/updateMe", user.updateMe);
@@ -85,6 +87,11 @@ protectRouter.post(
   "/subject/upload/media",
   upload.single("file"),
   uploadFile.uploadFileSubject
+);
+protectRouter.post(
+  "/classes/upload/media",
+  upload.single("file"),
+  uploadFile.uploadFileClass
 );
 protectRouter.get("/getMyFile", uploadFile.getFile);
 protectRouter.post("/addExpiredFile", uploadFile.addExpiredFile);

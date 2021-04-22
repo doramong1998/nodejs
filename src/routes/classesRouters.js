@@ -9,9 +9,12 @@ const {
   Point,
   Subjects,
   Attendance,
+  ClassFile,
+  Files
 } = require("../sequelize");
 require("dotenv").config();
-
+const jwt = require("jsonwebtoken");
+const accessTokenSecret = "yourSecretKey";
 const connection = mysql.createConnection({
   host: "localhost",
   user: "tranquanghuy",
@@ -386,3 +389,67 @@ exports.getClassByStudent = async (req, res) => {
     status: 200,
   });
 };
+
+
+exports.getClassByMe = async (req, res) => {
+  const token = req.headers.authorization.split("Bearer ")[1];
+  jwt.verify(token, accessTokenSecret, (err, user) => {
+    if (err) {
+      return res.sendStatus(403);
+    }
+    req.user = user;
+  });
+  const userClass = await UserClass.findOne({
+    where: { idUser: req.user.user.idUser },
+  });
+  const user = await UserInfo.findOne({
+    where: { idUser: req.user.user.idUser },
+  });
+  const allUserClass = await UserClass.findAll({
+    where: { idClass: userClass.dataValues.idClass },
+  });
+
+  const allStudentInClass = await Promise.all(
+    allUserClass?.map(async (item) => {
+      const student = await UserInfo.findOne({
+        where: {
+          idUser: item.dataValues.idUser,
+          permissionId: 3
+        },
+      });
+      return student;
+    })
+  );
+
+  const classes = await Classes.findOne({
+    where: {idClass: userClass.dataValues.idClass}
+  })
+  const teacher = await UserInfo.findOne({
+    where: {idUser: classes.dataValues.idTeacher}
+  })
+  const classFile = await ClassFile.findAll({
+    where: { idClass: userClass.dataValues.idClass }
+  })
+  console.log(classFile)
+  const newData = await Promise.all(
+    classFile?.map(async (item) => {
+      const file = await Files.findOne({
+        where: {
+          idFile: item.dataValues.idFile,
+        },
+      });
+      return file?.dataValues;
+    })
+  );
+  return res.status(200).json({
+    message: "Thành công!",
+    data: {
+      user,
+      class: { ...classes.dataValues, studentNum: _.compact(allStudentInClass)},
+      teacher,
+      listFile: newData 
+    },
+    status: 200,
+  });
+};
+
