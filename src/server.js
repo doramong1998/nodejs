@@ -83,6 +83,17 @@ protectRouter.post(
   upload.single("file"),
   uploadFile.uploadFile
 );
+protectRouter.delete(
+  "/upload/media/:id", uploadFile.deleteFile
+);
+protectRouter.delete(
+  "/upload/fileClass",
+  uploadFile.deleteFileClass
+);
+protectRouter.delete(
+  "/upload/fileSubject",
+  uploadFile.deleteFileSubject
+);
 protectRouter.post(
   "/subject/upload/media",
   upload.single("file"),

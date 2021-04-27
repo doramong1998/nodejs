@@ -7,7 +7,7 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const { Op } = require("sequelize");
-const { Files, UserFile, FileSubjects, ClassFile } = require("../sequelize");
+const { Files, UserFile, FileSubjects, ClassFile, UserInfo } = require("../sequelize");
 const Minio = require("minio");
 require("dotenv").config();
 const accessTokenSecret = "yourSecretKey";
@@ -305,6 +305,115 @@ exports.getFile = async (req, res, next) => {
     data: listFile,
     status: 200,
   });
+};
+
+exports.deleteFile = async (req, res) => {
+  const data = await Files.findOne({
+    where: { idFile: req.params.id },
+  });
+  if (data == null) {
+    res.status(400).json({
+      message: "File không tồn tại!",
+      status: 400,
+    });
+  } else if (data != null) {
+    data.destroy().then(() => {
+      res.status(200).json({
+        message: "Thành công!",
+        status: 200,
+      });
+    });
+  } else {
+    res.status(400).json({
+      message: "File không tồn tại!",
+      status: 400,
+    });
+  }
+};
+
+exports.deleteFileClass = async (req, res) => {
+  const token = req.headers.authorization.split("Bearer ")[1];
+  jwt.verify(token, accessTokenSecret, (err, user) => {
+    if (err) {
+      return res.sendStatus(403);
+    }
+    req.user = user;
+  });
+   const userPermisson = await UserInfo.findOne({
+    where: { idUser: req.user.user.idUser },
+  });
+  if(userPermisson?.dataValues?.permissionId === 3){
+    const file = await Files.findOne({
+      where: { idFile: req.body.idFile},
+    });
+    if (file == null) {
+    res.status(400).json({
+      message: "File không tồn tại!",
+      status: 400,
+    });
+    } else {
+      if(file?.dataValues?.idUser === req.user.user.idUser){
+        const data = await ClassFile.findOne({
+          where: { idFile: req.body.idFile, idClass: req.body.idClass },
+        });
+        file.destroy().then(() =>  data.destroy().then(() => {
+          res.status(200).json({
+            message: "Thành công!",
+            status: 200,
+          });
+        }) )
+      } else {
+        res.status(400).json({
+          message: "Bạn không có quyền xóa file này!",
+          status: 400,
+        });
+      }
+  } 
+
+  } else if (userPermisson?.dataValues?.permissionId !== 3) {
+    const data = await ClassFile.findOne({
+      where: { idFile: req.body.idFile, idClass: req.body.idClass },
+    });
+    file.destroy().then(() =>  data.destroy().then(() => {
+      res.status(200).json({
+        message: "Thành công!",
+        status: 200,
+      });
+    }) )
+  }  else {
+      res.status(400).json({
+        message: "Lỗi, không xác định được tài khoản!",
+        status: 400,
+      });
+    }
+};
+
+exports.deleteFileSubject = async (req, res) => {
+  const data = await FileSubjects.findOne({
+    where: { idFile: req.body.idFile, idSubject: req.body.idSubject },
+  });
+  if (data == null) {
+    res.status(400).json({
+      message: "File không tồn tại!",
+      status: 400,
+    });
+  } else if (data != null) {
+    const file = await Files.findOne({
+      where: { idFile: req.body.idFile },
+    });
+    file.destroy().then(() =>  data.destroy().then(() => {
+      res.status(200).json({
+        message: "Thành công!",
+        status: 200,
+      });
+    }))
+   
+  } else {
+    res.status(400).json({
+      message: "File không tồn tại!",
+      status: 400,
+    });
+  }
 };
 
 exports.addExpiredFile = async (req, res) => {

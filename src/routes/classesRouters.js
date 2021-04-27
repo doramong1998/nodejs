@@ -356,7 +356,7 @@ exports.getPointStudent = async (req, res) => {
         return subjects
           ? {
               ...subjects.dataValues,
-              point: { ...point.dataValues, pointDiligence: attend },
+              point: { ...point?.dataValues, pointDiligence: attend },
             }
           : null;
       })
@@ -430,7 +430,6 @@ exports.getClassByMe = async (req, res) => {
   const classFile = await ClassFile.findAll({
     where: { idClass: userClass.dataValues.idClass }
   })
-  console.log(classFile)
   const newData = await Promise.all(
     classFile?.map(async (item) => {
       const file = await Files.findOne({
@@ -445,9 +444,9 @@ exports.getClassByMe = async (req, res) => {
     message: "Thành công!",
     data: {
       user,
-      class: { ...classes.dataValues, studentNum: _.compact(allStudentInClass)},
+      class: { ...classes.dataValues, students: _.compact(allStudentInClass)},
       teacher,
-      listFile: newData 
+      listFile:  _.compact(newData) 
     },
     status: 200,
   });

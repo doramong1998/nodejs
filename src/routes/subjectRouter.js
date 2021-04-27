@@ -106,9 +106,9 @@ exports.updateSubject = async (req, res) => {
     where: { id: req.params.id },
   });
   if (data == null) {
-    res.status(401).json({
+    res.status(400).json({
       message: "Môn học không tồn tại!",
-      status: 401,
+      status: 400,
     });
   } else if (data != null) {
     if (!name || !code || name === "" || code === "") {
@@ -134,9 +134,9 @@ exports.updateSubject = async (req, res) => {
         });
     }
   } else {
-    res.status(401).json({
+    res.status(400).json({
       message: "Môn học không tồn tại!",
-      status: 401,
+      status: 400,
     });
   }
 };
@@ -146,9 +146,9 @@ exports.deleteSubject = async (req, res) => {
     where: { id: req.body.id },
   });
   if (data == null) {
-    res.status(401).json({
+    res.status(400).json({
       message: "Môn học không tồn tại!",
-      status: 401,
+      status: 400,
     });
   } else if (data != null) {
     data.destroy().then(() => {
@@ -158,9 +158,9 @@ exports.deleteSubject = async (req, res) => {
       });
     });
   } else {
-    res.status(401).json({
+    res.status(400).json({
       message: "Môn học không tồn tại!",
-      status: 401,
+      status: 400,
     });
   }
 };
@@ -229,7 +229,7 @@ exports.getDetailSubject = async (req, res) => {
       ...element.dataValues,
       teacher: teacher?.dataValues || null,
       students: _.compact(newDataUser),
-      listFile: newData,
+      listFile: _.compact(newData),
     };
     return res.status(200).json({
       message: "Thành công!",
@@ -403,7 +403,7 @@ exports.getUserInSubject = async (req, res) => {
       teacher: teacher?.dataValues || null,
       user: userInfo?.dataValues,
       point: { ...point?.dataValues, pointDiligence: attend },
-      listFile: newData,
+      listFile: _.compact(newData),
     };
     return res.status(200).json({
       message: "Thành công!",
