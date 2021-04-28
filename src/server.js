@@ -26,6 +26,7 @@ const user = require("./routes/infoRouters");
 const subject = require("./routes/subjectRouter");
 const point = require("./routes/pointRouter");
 const attend = require("./routes/attendRouters");
+const calendar = require("./routes/calendarRouters");
 require("dotenv").config();
 
 function getTokenFromBearer(req) {
@@ -127,6 +128,9 @@ protectRouter.get(
 );
 
 protectRouter.get("/subject/getSubjectByMe", subject.getSubjectByMe);
+// Calendar 
+protectRouter.post("/calendar/addCalendar", calendar.createCalendar);
+protectRouter.get("/calendar", calendar.getCalendarByMe);
 // point
 protectRouter.post("/point/updatePoint", point.updatePoint);
 // attend

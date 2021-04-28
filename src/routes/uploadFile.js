@@ -371,6 +371,15 @@ exports.deleteFileClass = async (req, res) => {
   } 
 
   } else if (userPermisson?.dataValues?.permissionId !== 3) {
+    const file = await Files.findOne({
+      where: { idFile: req.body.idFile},
+    });
+    if (file == null) {
+    res.status(400).json({
+      message: "File không tồn tại!",
+      status: 400,
+    });
+    } else {
     const data = await ClassFile.findOne({
       where: { idFile: req.body.idFile, idClass: req.body.idClass },
     });
@@ -380,7 +389,7 @@ exports.deleteFileClass = async (req, res) => {
         status: 200,
       });
     }) )
-  }  else {
+  }}  else {
       res.status(400).json({
         message: "Lỗi, không xác định được tài khoản!",
         status: 400,
@@ -389,31 +398,69 @@ exports.deleteFileClass = async (req, res) => {
 };
 
 exports.deleteFileSubject = async (req, res) => {
-  const data = await FileSubjects.findOne({
-    where: { idFile: req.body.idFile, idSubject: req.body.idSubject },
+  const token = req.headers.authorization.split("Bearer ")[1];
+  jwt.verify(token, accessTokenSecret, (err, user) => {
+    if (err) {
+      return res.sendStatus(403);
+    }
+    req.user = user;
   });
-  if (data == null) {
+   const userPermisson = await UserInfo.findOne({
+    where: { idUser: req.user.user.idUser },
+  });
+  if(userPermisson?.dataValues?.permissionId === 3){
+    const file = await Files.findOne({
+      where: { idFile: req.body.idFile},
+    });
+    if (file == null) {
     res.status(400).json({
       message: "File không tồn tại!",
       status: 400,
     });
-  } else if (data != null) {
+    } else {
+      if(file?.dataValues?.idUser === req.user.user.idUser){
+        const data = await FileSubjects.findOne({
+          where: { idFile: req.body.idFile, idSubject: req.body.idSubject },
+        });
+        file.destroy().then(() =>  data.destroy().then(() => {
+          res.status(200).json({
+            message: "Thành công!",
+            status: 200,
+          });
+        }) )
+      } else {
+        res.status(400).json({
+          message: "Bạn không có quyền xóa file này!",
+          status: 400,
+        });
+      }
+  } 
+
+  } else if (userPermisson?.dataValues?.permissionId !== 3) {
     const file = await Files.findOne({
-      where: { idFile: req.body.idFile },
+      where: { idFile: req.body.idFile},
+    });
+    if (file == null) {
+      res.status(400).json({
+        message: "File không tồn tại!",
+        status: 400,
+      });
+      } else {
+    const data = await FileSubjects.findOne({
+      where: { idFile: req.body.idFile, idSubject: req.body.idSubject },
     });
     file.destroy().then(() =>  data.destroy().then(() => {
       res.status(200).json({
         message: "Thành công!",
         status: 200,
       });
-    }))
-   
-  } else {
-    res.status(400).json({
-      message: "File không tồn tại!",
-      status: 400,
-    });
-  }
+    }) )
+  }}  else {
+      res.status(400).json({
+        message: "Lỗi, không xác định được tài khoản!",
+        status: 400,
+      });
+    }
 };
 
 exports.addExpiredFile = async (req, res) => {
