@@ -27,6 +27,9 @@ module.exports = (sequelize, type) => {
       status: {
         type: type.BOOLEAN,
       },
+      note: {
+        type: type.STRING,
+      },
     },
     {
       tableName: "classes",

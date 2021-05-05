@@ -2,7 +2,11 @@ const mysql = require("mysql");
 const { v4: uuidv4 } = require("uuid");
 const _ = require("lodash");
 const {
-  Calendar, UserCalendar, UserInfo
+  Calendar,
+  UserCalendar,
+  UserInfo,
+  PointUserSubject,
+  SubjectCalendar,
 } = require("../sequelize");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
@@ -35,18 +39,36 @@ exports.getCalendarByMe = async (req, res) => {
   const allCalendarId = await UserCalendar.findAll({
     where: { idUser: req.user.user.idUser },
   });
-
-  const allCalendar = await Promise.all(
-    allCalendarId?.map(async (item) => {
-      const calendar = await Calendar.findOne({
+  const subjectUser = await PointUserSubject.findAll({
+    where: { idUser: req.user.user.idUser },
+  });
+  const allSubject = await Promise.all(
+    subjectUser?.map(async (item) => {
+      const calendar = await SubjectCalendar.findAll({
         where: {
-          idCalendar: item.dataValues.idCalendar,
+          idSubject: item.dataValues.idSubject,
         },
       });
-      return calendar;
+      return calendar?.length > 0
+        ? calendar?.map((item) => item.dataValues)
+        : null;
     })
   );
 
+  const allCalendar = await Promise.all(
+    allCalendarId
+      ?.map((item) => item.dataValues)
+      ?.concat(_.compact(allSubject))
+      .flatMap((item) => item)
+      ?.map(async (item) => {
+        const calendar = await Calendar.findOne({
+          where: {
+            idCalendar: item.idCalendar,
+          },
+        });
+        return calendar;
+      })
+  );
   return res.status(200).json({
     message: "Thành công!",
     data: allCalendar,
@@ -68,33 +90,148 @@ exports.createCalendar = async (req, res) => {
     !req.body.type ||
     req.body.name === "" ||
     req.body.time === "" ||
-    req.body.type === "" 
+    req.body.type === ""
   ) {
     res.status(400).json({
       error: "Chưa điền đầy đủ thông tin!",
       status: 400,
     });
   } else {
-    const {
-     name, time, type, status
-    } = req.body;
-        const idCalendar = uuidv4()
-        UserCalendar.create({
-          idUser: req.user.user.idUser,
-          idCalendar,
+    const { name, time, type, status } = req.body;
+    const idCalendar = uuidv4();
+    UserCalendar.create({
+      idUser: req.user.user.idUser,
+      idCalendar,
+    });
+    Calendar.create({
+      idCalendar,
+      name,
+      time,
+      type,
+      status: status || true,
+    }).then((data) => {
+      return res.status(200).json({
+        message: "Thành công!",
+        data,
+        status: 200,
+      });
+    });
+  }
+};
+
+exports.deleteCalendar = async (req, res) => {
+  const token = req.headers.authorization.split("Bearer ")[1];
+  jwt.verify(token, accessTokenSecret, (err, user) => {
+    if (err) {
+      return res.sendStatus(403);
+    }
+    req.user = user;
+  });
+  const userPermisson = await UserInfo.findOne({
+    where: { idUser: req.user.user.idUser },
+  });
+  if (userPermisson?.dataValues?.permissionId === 3) {
+    const userCalendar = await UserCalendar.findOne({
+      where: { idUser: req.user.user.idUser, idCalendar: req.body.idCalendar },
+    });
+    if (userCalendar !== null) {
+      const calendar = await Calendar.findOne({
+        where: { idCalendar: req.body.idCalendar },
+      });
+      userCalendar.destroy().then(() =>
+        calendar.destroy().then(() => {
+          res.status(200).json({
+            message: "Thành công!",
+            status: 200,
+          });
         })
-        Calendar.create({
-          idCalendar,
+      );
+    } else  res.status(400).json({
+      message: "Không thể xóa lịch!",
+      status: 400,
+    });
+  } else if (userPermisson?.dataValues?.permissionId !== 3) {
+      const subjectCalendar = await SubjectCalendar.findOne({
+        where: { idCalendar: req.body.idCalendar },
+      });
+      const calendar = await Calendar.findOne({
+        where: { idCalendar: req.body.idCalendar },
+      });
+      subjectCalendar.destroy().then(() =>
+        calendar.destroy().then(() => {
+          res.status(200).json({
+            message: "Thành công!",
+            status: 200,
+          });
+        })
+      );
+   
+  } else {
+    res.status(400).json({
+      message: "Lỗi, không xác định được tài khoản!",
+      status: 400,
+    });
+  }
+};
+
+exports.updateCalendar = async (req, res) => {
+  const token = req.headers.authorization.split("Bearer ")[1];
+  jwt.verify(token, accessTokenSecret, (err, user) => {
+    if (err) {
+      return res.sendStatus(403);
+    }
+    req.user = user;
+  });
+  const userPermisson = await UserInfo.findOne({
+    where: { idUser: req.user.user.idUser },
+  });
+  if (userPermisson?.dataValues?.permissionId === 3) {
+    const userCalendar = await UserCalendar.findOne({
+      where: { idUser: req.user.user.idUser, idCalendar: req.body.idCalendar },
+    });
+    
+    if (userCalendar !== null) {
+      const { name, time, type, status } = req.body;
+      const calendar = await Calendar.findOne({
+        where: { idCalendar: req.body.idCalendar },
+      });
+      
+        calendar.update({
           name,
           time,
           type,
-          status: status || true,
         }).then((data) => {
-          return res.status(200).json({
+          res.status(200).json({
             message: "Thành công!",
-            data,
+            data: data,
             status: 200,
           });
-        } )
-      }
+        })
+    
+    } else  res.status(400).json({
+      message: "Không thể cập nhập lịch!",
+      status: 400,
+    });
+  } else if (userPermisson?.dataValues?.permissionId !== 3) {
+    const { name, time, type, status } = req.body;
+    const calendar = await Calendar.findOne({
+      where: { idCalendar: req.body.idCalendar },
+    });
+      calendar.update({
+        name,
+        time,
+        type,
+      }).then((data) => {
+        res.status(200).json({
+          message: "Thành công!",
+          data: data,
+          status: 200,
+        });
+      })
+  } else {
+    res.status(400).json({
+      message: "Lỗi, không xác định được tài khoản!",
+      status: 400,
+    });
+  }
 };

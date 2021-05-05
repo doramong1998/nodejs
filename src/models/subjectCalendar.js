@@ -1,6 +1,6 @@
 module.exports = (sequelize, type) => {
-  var calendar = sequelize.define(
-    "calendar",
+  var subjectCalendar = sequelize.define(
+    "subject_calendar",
     {
       id: {
         type: type.INTEGER,
@@ -11,24 +11,15 @@ module.exports = (sequelize, type) => {
         type: type.STRING,
         allowNull: false,
       },
-      name: {
+      idSubject: {
         type: type.STRING,
-         allowNull: false,
-      },
-      time: {
-        type: type.INTEGER,
-      },
-      type: {
-        type: type.STRING,
-      },
-      status: {
-        type: type.BOOLEAN,
+        allowNull: false,
       },
     },
     {
-      tableName: "calendar",
+      tableName: "subject_calendar",
       timestamps: true,
     }
   );
-  return calendar;
+  return subjectCalendar;
 };

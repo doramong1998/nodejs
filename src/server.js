@@ -130,6 +130,8 @@ protectRouter.get(
 protectRouter.get("/subject/getSubjectByMe", subject.getSubjectByMe);
 // Calendar 
 protectRouter.post("/calendar/addCalendar", calendar.createCalendar);
+protectRouter.delete("/calendar/deleteCalendar", calendar.deleteCalendar);
+protectRouter.put("/calendar/updateCalendar", calendar.updateCalendar);
 protectRouter.get("/calendar", calendar.getCalendarByMe);
 // point
 protectRouter.post("/point/updatePoint", point.updatePoint);

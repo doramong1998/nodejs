@@ -9,6 +9,8 @@ const {
   Attendance,
   FileSubjects,
   Files,
+  SubjectCalendar,
+  Calendar
 } = require("../sequelize");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
@@ -68,15 +70,33 @@ exports.createSubject = async (req, res) => {
       studentNum,
       totalStudent,
       idTeacher,
+      calendar
     } = req.body;
     Subjects.findOne({
       where: {
         name: req.body.name,
       },
-    }).then((data) => {
+    }).then(async(data) => {
       if (data == null) {
+        const idSubject = uuidv4()
+        await Promise.all( 
+          calendar?.map((item) => {
+            Calendar.create({
+              idCalendar: uuidv4(),
+              name: item.name,
+              time: item.time,
+              type: item.type,
+              status: item?.status || true,
+            }).then((res) => {
+              SubjectCalendar.create({
+                idSubject,
+                idCalendar: res.idCalendar,
+              })
+            })
+          })
+        );
         Subjects.create({
-          idSubject: uuidv4(),
+          idSubject,
           name,
           code,
           studentNum,
@@ -183,6 +203,7 @@ exports.getDetailSubject = async (req, res) => {
     const allIdUser = await PointUserSubject.findAll({
       where: { idSubject: element.dataValues.idSubject },
     });
+
     const newDataUser = await Promise.all(
       allIdUser?.map(async (item) => {
         const user = await UserInfo.findOne({
@@ -225,11 +246,26 @@ exports.getDetailSubject = async (req, res) => {
         return file?.dataValues;
       })
     );
+
+    const allCalendar = await SubjectCalendar.findAll({
+      where: { idSubject: element.dataValues.idSubject },
+    });
+    const dataCalendar = await Promise.all(
+      allCalendar?.map(async (item) => {
+        const calendar = await Calendar.findOne({
+          where: {
+            idCalendar: item.dataValues.idCalendar,
+          },
+        });
+        return calendar?.dataValues;
+      })
+    );
     const newSubject = {
       ...element.dataValues,
       teacher: teacher?.dataValues || null,
       students: _.compact(newDataUser),
       listFile: _.compact(newData),
+      calendar: _.compact(dataCalendar)
     };
     return res.status(200).json({
       message: "Thành công!",

@@ -14,6 +14,7 @@ const PointUserSubjectModel = require("./models/pointUserSubject");
 const AttendanceModal = require("./models/attendance");
 const CalendarModel = require("./models/calendar");
 const UserCalendarModel = require("./models/userCalendar");
+const SubjectCalendarModel = require("./models/subjectCalendar");
 const sequelize = new Sequelize("database", "tranquanghuy", "123456", {
   host: "localhost",
   dialect: "mysql",
@@ -35,6 +36,7 @@ const PointUserSubject = PointUserSubjectModel(sequelize, Sequelize);
 const Attendance = AttendanceModal(sequelize, Sequelize);
 const Calendar = CalendarModel(sequelize, Sequelize);
 const UserCalendar = UserCalendarModel(sequelize, Sequelize);
+const SubjectCalendar = SubjectCalendarModel(sequelize, Sequelize);
 sequelize.sync().then(() => {
   console.log(
     "-----------------------------------------------------------------------------------------------"
@@ -56,5 +58,6 @@ module.exports = {
   Attendance,
   PointUserSubject,
   Calendar,
-  UserCalendar
+  UserCalendar,
+  SubjectCalendar
 };
