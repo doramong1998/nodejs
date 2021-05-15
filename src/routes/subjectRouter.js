@@ -231,6 +231,7 @@ exports.getDetailSubject = async (req, res) => {
           : null;
       })
     );
+    
     const fileSubject = await FileSubjects.findAll({
       where: {
         idSubject: element.dataValues.idSubject,

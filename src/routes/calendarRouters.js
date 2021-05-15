@@ -154,10 +154,14 @@ exports.deleteCalendar = async (req, res) => {
       const subjectCalendar = await SubjectCalendar.findOne({
         where: { idCalendar: req.body.idCalendar },
       });
+      const userCalendar = await UserCalendar.findOne({
+        where: { idUser: req.user.user.idUser, idCalendar: req.body.idCalendar },
+      });
       const calendar = await Calendar.findOne({
         where: { idCalendar: req.body.idCalendar },
       });
-      subjectCalendar.destroy().then(() =>
+      if(subjectCalendar){
+        subjectCalendar.destroy().then(() =>
         calendar.destroy().then(() => {
           res.status(200).json({
             message: "Thành công!",
@@ -165,6 +169,21 @@ exports.deleteCalendar = async (req, res) => {
           });
         })
       );
+      }
+      else if(userCalendar){
+        userCalendar.destroy().then(() =>
+        calendar.destroy().then(() => {
+          res.status(200).json({
+            message: "Thành công!",
+            status: 200,
+          });
+        })
+      );
+      }
+      else  res.status(400).json({
+        message: "Không thể xóa lịch!",
+        status: 400,
+      });
    
   } else {
     res.status(400).json({
@@ -228,6 +247,52 @@ exports.updateCalendar = async (req, res) => {
           status: 200,
         });
       })
+  } else {
+    res.status(400).json({
+      message: "Lỗi, không xác định được tài khoản!",
+      status: 400,
+    });
+  }
+};
+
+exports.createACalendarSubject = async (req, res) => {
+  const token = req.headers.authorization.split("Bearer ")[1];
+  jwt.verify(token, accessTokenSecret, (err, user) => {
+    if (err) {
+      return res.sendStatus(403);
+    }
+    req.user = user;
+  });
+
+  const userPermisson = await UserInfo.findOne({
+    where: { idUser: req.user.user.idUser },
+  });
+  if (userPermisson?.dataValues?.permissionId === 3) {
+     res.status(400).json({
+      message: "Bạn không có quyền tạo lịch cho môn học!",
+      status: 400,
+    });
+  } else if (userPermisson?.dataValues?.permissionId !== 3) {
+    const { name, time, type, status, idSubject } = req.body;
+    console.log(name, time, type, status, idSubject)
+    const idCalendar = uuidv4();
+    SubjectCalendar.create({
+      idSubject,
+      idCalendar,
+    });
+    Calendar.create({
+      idCalendar,
+      name,
+      time,
+      type,
+      status: status || true,
+    }).then((data) => {
+      return res.status(200).json({
+        message: "Thành công!",
+        data,
+        status: 200,
+      });
+    });
   } else {
     res.status(400).json({
       message: "Lỗi, không xác định được tài khoản!",
