@@ -15,7 +15,7 @@ const AttendanceModal = require("./models/attendance");
 const CalendarModel = require("./models/calendar");
 const UserCalendarModel = require("./models/userCalendar");
 const SubjectCalendarModel = require("./models/subjectCalendar");
-const sequelize = new Sequelize("database", "tranquanghuy", "123456", {
+const sequelize = new Sequelize("database", "root", "password", {
   host: "localhost",
   dialect: "mysql",
   port: 3336,
