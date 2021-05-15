@@ -18,7 +18,7 @@ const SubjectCalendarModel = require("./models/subjectCalendar");
 const sequelize = new Sequelize("database", "tranquanghuy", "123456", {
   host: "localhost",
   dialect: "mysql",
-  port: 3306,
+  port: 3336,
 });
 
 const User = UserModel(sequelize, Sequelize);
