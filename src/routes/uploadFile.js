@@ -1,5 +1,5 @@
 // import User from '../sequelize';
-
+require("dotenv").config();
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const mysql = require("mysql");
@@ -9,7 +9,7 @@ const { v4: uuidv4 } = require("uuid");
 const { Op } = require("sequelize");
 const { Files, UserFile, FileSubjects, ClassFile, UserInfo } = require("../sequelize");
 const Minio = require("minio");
-require("dotenv").config();
+
 const accessTokenSecret = "yourSecretKey";
 const fs = require("fs");
 const VirusTotalApi = require("virustotal-api");
@@ -31,13 +31,13 @@ var minioClient = new Minio.Client({
   secretKey: "7B3E7EB4F2796",
 });
 
-const connection = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "password",
-  database: "database",
-  port: 3336
-});
+  const connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'tranquanghuy',
+    password: '123456',
+    database: 'database',
+    port: 3306
+    });
 connection.connect((err) => {
   if (!err) {
     // eslint-disable-next-line no-console

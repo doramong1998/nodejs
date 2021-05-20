@@ -1,5 +1,5 @@
 // import User from '../sequelize';
-
+require("dotenv").config();
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const mysql = require("mysql");
@@ -8,17 +8,17 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const { Op } = require("sequelize");
 const { UserInfo, User, UserClass } = require("../sequelize");
-require("dotenv").config();
+
 const accessTokenSecret = "yourSecretKey";
 const saltRounds = 10;
 
-const connection = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "password",
-  database: "database",
-  port: 3336
-});
+  const connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'tranquanghuy',
+    password: '123456',
+    database: 'database',
+    port: 3306
+    });
 
 connection.connect((err) => {
   if (!err) {

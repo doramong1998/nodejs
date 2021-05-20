@@ -1,14 +1,14 @@
 const mysql = require("mysql");
+require("dotenv").config();
 const { v4: uuidv4 } = require("uuid");
 const { PointUserSubject, Point } = require("../sequelize");
-const env =  require("dotenv").config();
 
 const connection = mysql.createConnection({
   host: "localhost",
-  user: "root",  //tranquanghuy
-  password: "password", //123456
+  user: "tranquanghuy",
+  password: "123456",
   database: "database",
-  port: 3336
+  port: 3306,
 });
 connection.connect((err) => {
   if (!err) {

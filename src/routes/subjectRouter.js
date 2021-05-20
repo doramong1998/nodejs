@@ -1,4 +1,5 @@
 const mysql = require("mysql");
+require("dotenv").config();
 const { v4: uuidv4 } = require("uuid");
 const _ = require("lodash");
 const {
@@ -10,17 +11,17 @@ const {
   FileSubjects,
   Files,
   SubjectCalendar,
-  Calendar
+  Calendar,
 } = require("../sequelize");
-require("dotenv").config();
+
 const jwt = require("jsonwebtoken");
 const accessTokenSecret = "yourSecretKey";
 const connection = mysql.createConnection({
   host: "localhost",
-  user: "root",
-  password: "password",
+  user: "tranquanghuy",
+  password: "123456",
   database: "database",
-  port: 3336
+  port: 3306,
 });
 
 connection.connect((err) => {
@@ -71,16 +72,16 @@ exports.createSubject = async (req, res) => {
       studentNum,
       totalStudent,
       idTeacher,
-      calendar
+      calendar,
     } = req.body;
     Subjects.findOne({
       where: {
         name: req.body.name,
       },
-    }).then(async(data) => {
+    }).then(async (data) => {
       if (data == null) {
-        const idSubject = uuidv4()
-        await Promise.all( 
+        const idSubject = uuidv4();
+        await Promise.all(
           calendar?.map((item) => {
             Calendar.create({
               idCalendar: uuidv4(),
@@ -92,8 +93,8 @@ exports.createSubject = async (req, res) => {
               SubjectCalendar.create({
                 idSubject,
                 idCalendar: res.idCalendar,
-              })
-            })
+              });
+            });
           })
         );
         Subjects.create({
@@ -232,7 +233,7 @@ exports.getDetailSubject = async (req, res) => {
           : null;
       })
     );
-    
+
     const fileSubject = await FileSubjects.findAll({
       where: {
         idSubject: element.dataValues.idSubject,
@@ -267,7 +268,7 @@ exports.getDetailSubject = async (req, res) => {
       teacher: teacher?.dataValues || null,
       students: _.compact(newDataUser),
       listFile: _.compact(newData),
-      calendar: _.compact(dataCalendar)
+      calendar: _.compact(dataCalendar),
     };
     return res.status(200).json({
       message: "Thành công!",

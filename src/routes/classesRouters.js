@@ -1,4 +1,5 @@
 const mysql = require("mysql");
+require("dotenv").config();
 const { v4: uuidv4 } = require("uuid");
 const _ = require("lodash");
 const {
@@ -10,17 +11,17 @@ const {
   Subjects,
   Attendance,
   ClassFile,
-  Files
+  Files,
 } = require("../sequelize");
-require("dotenv").config();
+
 const jwt = require("jsonwebtoken");
 const accessTokenSecret = "yourSecretKey";
 const connection = mysql.createConnection({
   host: "localhost",
-  user: "root",
-  password: "password",
+  user: "tranquanghuy",
+  password: "123456",
   database: "database",
-  port: 3336
+  port: 3306,
 });
 
 connection.connect((err) => {
@@ -64,14 +65,8 @@ exports.createClass = async (req, res) => {
       status: 400,
     });
   } else {
-    const {
-      name,
-      idTeacher,
-      files,
-      status,
-      studentNum,
-      totalStudent,
-    } = req.body;
+    const { name, idTeacher, files, status, studentNum, totalStudent } =
+      req.body;
     Classes.findOne({
       where: {
         name: req.body.name,
@@ -252,6 +247,67 @@ exports.addStudentToClass = async (req, res) => {
   }
 };
 
+exports.addFileStudentToClass = async (req, res) => {
+  const { data, idClass } = req.body;
+  const listSuccess = [];
+  const listFail = [];
+  const waitData = await Promise.all(
+    data?.map(async (item) => {
+      const userInfo = await UserInfo.findOne({
+        where: { studentId: item.code },
+      });
+      if (userInfo != null) {
+        const userClass = await UserClass.findOne({
+          where: { idUser: userInfo?.dataValues?.idUser },
+        });
+        userInfo.update({
+          idClass,
+        });
+        if (userClass !== null) {
+          userClass.update({
+            idClass,
+          });
+          listSuccess.push({
+            ...item,
+            message: "Thành công!",
+            status: true,
+          });
+          return { ...item, message: "Thành công!", status: true };
+        } else {
+          UserClass.create({
+            idUser: userInfo?.dataValues?.idUser,
+            idClass,
+          });
+          listSuccess.push({ ...item, message: "Thành công!", status: true });
+          return { ...item, message: "Thành công!", status: true };
+        }
+      } else {
+        listFail.push({
+          ...item,
+          message: "Mã sinh viên không chính xác!",
+          status: false,
+        });
+        return {
+          ...item,
+          message: "Mã sinh viên không chính xác!",
+          status: false,
+        };
+      }
+    })
+  );
+  console.log(listSuccess);
+  const responseData = {
+    allList: waitData,
+    listSuccess,
+    listFail,
+  };
+  return res.status(200).json({
+    message: "Thành công!",
+    data: responseData,
+    status: 200,
+  });
+};
+
 exports.changeTeacherClass = async (req, res) => {
   const { idUser, idClass } = req.body;
   const userClass = await UserClass.findOne({
@@ -391,7 +447,6 @@ exports.getClassByStudent = async (req, res) => {
   });
 };
 
-
 exports.getClassByMe = async (req, res) => {
   const token = req.headers.authorization.split("Bearer ")[1];
   jwt.verify(token, accessTokenSecret, (err, user) => {
@@ -415,7 +470,7 @@ exports.getClassByMe = async (req, res) => {
       const student = await UserInfo.findOne({
         where: {
           idUser: item.dataValues.idUser,
-          permissionId: 3
+          permissionId: 3,
         },
       });
       return student;
@@ -423,14 +478,14 @@ exports.getClassByMe = async (req, res) => {
   );
 
   const classes = await Classes.findOne({
-    where: {idClass: userClass.dataValues.idClass}
-  })
+    where: { idClass: userClass.dataValues.idClass },
+  });
   const teacher = await UserInfo.findOne({
-    where: {idUser: classes.dataValues.idTeacher}
-  })
+    where: { idUser: classes.dataValues.idTeacher },
+  });
   const classFile = await ClassFile.findAll({
-    where: { idClass: userClass.dataValues.idClass }
-  })
+    where: { idClass: userClass.dataValues.idClass },
+  });
   const newData = await Promise.all(
     classFile?.map(async (item) => {
       const file = await Files.findOne({
@@ -445,11 +500,10 @@ exports.getClassByMe = async (req, res) => {
     message: "Thành công!",
     data: {
       user,
-      class: { ...classes.dataValues, students: _.compact(allStudentInClass)},
+      class: { ...classes.dataValues, students: _.compact(allStudentInClass) },
       teacher,
-      listFile:  _.compact(newData) 
+      listFile: _.compact(newData),
     },
     status: 200,
   });
 };
-

@@ -1,4 +1,5 @@
 const path = require("path");
+require("dotenv").config();
 const bodyParser = require("body-parser");
 const port = 3000;
 const express = require("express");
@@ -27,7 +28,7 @@ const subject = require("./routes/subjectRouter");
 const point = require("./routes/pointRouter");
 const attend = require("./routes/attendRouters");
 const calendar = require("./routes/calendarRouters");
-require("dotenv").config();
+
 
 function getTokenFromBearer(req) {
   const authorization = req.headers.authorization;
@@ -60,6 +61,7 @@ protectRouter.delete("/classes/delete", classes.deleteClass);
 protectRouter.get("/classes", classes.getClass);
 protectRouter.get("/classes/detail/:id", classes.getDetailClass);
 protectRouter.post("/classes/addStudentToClass", classes.addStudentToClass);
+protectRouter.post("/classes/addFileStudentToClass", classes.addFileStudentToClass);
 protectRouter.post("/classes/changeTeacherClass", classes.changeTeacherClass);
 protectRouter.delete(
   "/classes/deleteStudentFromClass",

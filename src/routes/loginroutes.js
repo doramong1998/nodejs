@@ -14,10 +14,10 @@ const saltRounds = 10;
 
 const connection = mysql.createConnection({
   host: "localhost",
-  user: "root",
-  password: "password",
+  user: "tranquanghuy",
+  password: "123456",
   database: "database",
-  port: 3336
+  port: 3306,
 });
 connection.connect((err) => {
   if (!err) {

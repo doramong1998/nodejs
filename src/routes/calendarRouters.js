@@ -1,4 +1,5 @@
 const mysql = require("mysql");
+require("dotenv").config();
 const { v4: uuidv4 } = require("uuid");
 const _ = require("lodash");
 const {
@@ -8,16 +9,16 @@ const {
   PointUserSubject,
   SubjectCalendar,
 } = require("../sequelize");
-require("dotenv").config();
+
 const jwt = require("jsonwebtoken");
 const accessTokenSecret = "yourSecretKey";
-const connection = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "password",
-  database: "database",
-  port: 3336
-});
+  const connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'tranquanghuy',
+    password: '123456',
+    database: 'database',
+    port: 3306
+    });
 
 connection.connect((err) => {
   if (!err) {
