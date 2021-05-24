@@ -5,10 +5,10 @@ const { PointUserSubject, Point } = require("../sequelize");
 
 const connection = mysql.createConnection({
   host: "localhost",
-  user: "tranquanghuy",
-  password: "123456",
+  user: "root",
+  password: "password",
   database: "database",
-  port: 3306,
+  port: 3336
 });
 connection.connect((err) => {
   if (!err) {

@@ -11,15 +11,13 @@ const { UserInfo, User, UserClass } = require("../sequelize");
 
 const accessTokenSecret = "yourSecretKey";
 const saltRounds = 10;
-
-  const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'tranquanghuy',
-    password: '123456',
-    database: 'database',
-    port: 3306
-    });
-
+const connection = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "password",
+  database: "database",
+  port: 3336
+});
 connection.connect((err) => {
   if (!err) {
     // eslint-disable-next-line no-console

@@ -312,6 +312,63 @@ exports.addStudentToSubject = async (req, res) => {
   }
 };
 
+exports.addFileStudentToClass = async (req, res) => {
+  const { data, idSubject } = req.body;
+  const listSuccess = [];
+  const listFail = [];
+  const waitData = await Promise.all(
+    data?.map(async (item) => {
+      const userInfo = await UserInfo.findOne({
+        where: { studentId: item.code },
+      });
+      if (userInfo != null) {
+        const userSubject = await PointUserSubject.findOne({
+          where: { idUser: userInfo?.dataValues?.idUser, idSubject: idSubject },
+        });
+        if (userSubject !== null) {
+          userSubject.update({
+            idSubject,
+          });
+          listSuccess.push({
+            ...item,
+            message: "Thành công!",
+            status: true,
+          });
+          return { ...item, message: "Sinh viên đã có trong môn học!", status: true };
+        } else {
+          PointUserSubject.create({
+            idUser: userInfo?.dataValues?.idUser,
+            idSubject,
+          });
+          listSuccess.push({ ...item, message: "Thành công!", status: true });
+          return { ...item, message: "Thành công!", status: true };
+        }
+      } else {
+        listFail.push({
+          ...item,
+          message: "Mã sinh viên không chính xác!",
+          status: false,
+        });
+        return {
+          ...item,
+          message: "Mã sinh viên không chính xác!",
+          status: false,
+        };
+      }
+    })
+  );
+  const responseData = {
+    allList: waitData,
+    listSuccess,
+    listFail,
+  };
+  return res.status(200).json({
+    message: "Thành công!",
+    data: responseData,
+    status: 200,
+  });
+};
+
 exports.changeTeacherSubject = async (req, res) => {
   const { idUser, idSubject } = req.body;
   const userSubject = await PointUserSubject.findOne({

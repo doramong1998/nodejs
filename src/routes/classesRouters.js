@@ -295,7 +295,6 @@ exports.addFileStudentToClass = async (req, res) => {
       }
     })
   );
-  console.log(listSuccess);
   const responseData = {
     allList: waitData,
     listSuccess,

@@ -115,6 +115,7 @@ protectRouter.put("/subject/update/:id", subject.updateSubject);
 protectRouter.delete("/subject/delete", subject.deleteSubject);
 protectRouter.get("/subject/detail/:id", subject.getDetailSubject);
 protectRouter.post("/subject/addStudentToSubject", subject.addStudentToSubject);
+protectRouter.post("/subject/addFileStudentToSubject", subject.addFileStudentToClass)
 protectRouter.post(
   "/subject/changeTeacherSubject",
   subject.changeTeacherSubject
