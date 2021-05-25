@@ -16,9 +16,9 @@ const CalendarModel = require("./models/calendar");
 const UserCalendarModel = require("./models/userCalendar");
 const SubjectCalendarModel = require("./models/subjectCalendar");
 const sequelize = new Sequelize("database", "root", "password", { //root - password
-  host: process.env.ENV_HOST,
+  host: localhost,
   dialect: "mysql",
-  port: process.env.ENV_PORT,
+  port: 3336,
 });
 
 const User = UserModel(sequelize, Sequelize);
