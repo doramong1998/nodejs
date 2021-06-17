@@ -9,7 +9,6 @@ const { v4: uuidv4 } = require("uuid");
 const { Op } = require("sequelize");
 const { Files, UserFile, FileSubjects, ClassFile, UserInfo } = require("../sequelize");
 const Minio = require("minio");
-
 const accessTokenSecret = "yourSecretKey";
 const fs = require("fs");
 const VirusTotalApi = require("virustotal-api");
@@ -58,73 +57,82 @@ exports.uploadFile = async (req, res, next) => {
   var metaData = {
     "Content-Type": req.file.mimetype,
   };
-  virusTotal
-    .fileScan(req.file, req.file.originalname)
-    .then((response) => {
-      let resource = response.resource;
-      virusTotal.fileReport(resource).then((result) => {
-        if (result.positives > 0) {
-          res.status(400).json({
-            message: "File có nguy cơ chứa mã độc/virus, hủy tải lên!",
-            status: 400,
-          });
-        } else {
-          minioClient.fPutObject(
-            "huytq",
-            req.file.originalname,
-            req.file.path,
-            metaData,
-            function (error, etag) {
-              if (error) {
-                return res.status(400).json({
-                  error: "Có lỗi xảy ra!",
-                  status: 400,
-                });
-              }
-              minioClient.presignedGetObject(
-                "huytq",
-                req.file.originalname,
-                7 * 24 * 60 * 60,
-                function (err, presignedUrl) {
-                  if (err)
-                    return res.status(400).json({
-                      error: "Có lỗi xảy ra!",
-                      status: 400,
-                    });
-                  else {
-                    const idFile = uuidv4();
-                    UserFile.create({
-                      idFile,
-                      idUser: req.user.user.idUser,
-                    });
-                    Files.create({
-                      idFile,
-                      name: req.file.originalname,
-                      type: req.file.mimetype,
-                      url: presignedUrl,
-                      idUser: req.user.user.idUser,
-                      status: true,
-                    }).then((data) => {
-                      res.status(201).json({
-                        data,
-                        message: "Thành công!",
-                        status: 200,
-                      });
-                    });
-                  }
+  fs.readFile(req.file.path, (err, data) => 
+  {
+    if (data) {
+      virusTotal
+      .fileScan(data, req.file.originalname)
+      .then((response) => {
+        console.log(response)
+        let resource = response.resource;
+        virusTotal.fileReport(resource).then((result) => {
+          console.log(result)
+          if (result.positives > 0) {
+            res.status(400).json({
+              message: "File có nguy cơ chứa mã độc/virus, hủy tải lên!",
+              status: 400,
+            });
+          } else {
+            minioClient.fPutObject(
+              "huytq",
+              req.file.originalname,
+              req.file.path,
+              metaData,
+              function (error, etag) {
+                if (error) {
+                  return res.status(400).json({
+                    error: "Có lỗi xảy ra!",
+                    status: 400,
+                  });
                 }
-              );
-            }
-          );
-        }
-      });
-    })
-    .catch((err) =>
-      res.status(400).json({
-        message: "Có lỗi xảy ra, vui lòng thử lại!",
-        status: 400,
+                minioClient.presignedGetObject(
+                  "huytq",
+                  req.file.originalname,
+                  7 * 24 * 60 * 60,
+                  function (err, presignedUrl) {
+                    if (err)
+                      return res.status(400).json({
+                        error: "Có lỗi xảy ra!",
+                        status: 400,
+                      });
+                    else {
+                      const idFile = uuidv4();
+                      UserFile.create({
+                        idFile,
+                        idUser: req.user.user.idUser,
+                      });
+                      Files.create({
+                        idFile,
+                        name: req.file.originalname,
+                        type: req.file.mimetype,
+                        url: presignedUrl,
+                        idUser: req.user.user.idUser,
+                        status: true,
+                      }).then((data) => {
+                        res.status(201).json({
+                          data,
+                          message: "Thành công!",
+                          status: 200,
+                        });
+                      });
+                    }
+                  }
+                );
+              }
+            );
+          }
+        });
       })
-    );
+      .catch((err) =>
+        res.status(400).json({
+          message: "Có lỗi xảy ra, vui lòng thử lại!",
+          status: 400,
+        })
+      );
+    }
+  }
+  )
+ 
 };
 
 exports.uploadFileSubject = async (req, res, next) => {
